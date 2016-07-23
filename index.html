@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <link rel="stylesheet" type="text/css" href="css/product.css">
+</head>
+<body>
+    <div id="raw-product-temlate" class="hidden">
+        <div class="raw-product">
+            <input type="text" name="description" placeholder="описание" class="product-item description">
+            <input type="number" name="proteins" placeholder="белки" class="product-item proteins">
+            <input type="number" name="triglyceride" placeholder="жиры" class="product-item triglyceride">
+            <input type="number" name="carbohydrate " placeholder="углеводы" class="product-item carbohydrate">
+            <input type="number" name="calories" placeholder="углеводы" class="product-item calories">
+        </div>
+    </div>
+
+    <button id="add-raw-product">add</button>
+    <div id="new-raw-product"></div>
+    <div id="raw-product-list">
+
+    </div>
+
+    <script src="https://cdn.firebase.com/js/client/2.4.2/firebase.js"></script>
+    <script src="https://code.jquery.com/jquery-3.1.0.slim.min.js"></script>
+    <script src="js/RawProductView.js"></script>
+    <script src="js/Template.js"></script>
+    <script src="js/main.js"></script>
+
+</body>
+</html>
+
