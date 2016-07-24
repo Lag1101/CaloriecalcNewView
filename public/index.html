@@ -7,7 +7,14 @@
     <link rel="stylesheet" type="text/css" href="css/product.css">
 </head>
 <body>
-    <div id="raw-product-temlate" class="hidden">
+    <button id="add-raw-product">add</button>
+    <div id="new-raw-product"></div>
+    <div id="raw-product-list">
+
+    </div>
+
+
+    <div id="raw-product-template" class="hidden">
         <div class="raw-product">
             <input type="text" name="description" placeholder="описание" class="product-item description">
             <input type="number" name="proteins" placeholder="белки" class="product-item proteins">
@@ -17,16 +24,12 @@
         </div>
     </div>
 
-    <button id="add-raw-product">add</button>
-    <div id="new-raw-product"></div>
-    <div id="raw-product-list">
-
-    </div>
-
     <script src="https://www.gstatic.com/firebasejs/3.1.0/firebase.js"></script>
     <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+    <script src="js/ErrorWrapper.js"></script>
     <script src="js/RawProductView.js"></script>
     <script src="js/Template.js"></script>
+    <script src="js/FirebaseWrapper.js"></script>
     <script src="js/main.js"></script>
 
 </body>

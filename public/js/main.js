@@ -1,66 +1,61 @@
 /**
  * Created by LuckyBug on 23.07.2016.
  */
+(function(){
 
+    const rawProductTemlate = new Template("#raw-product-template");
 
-const rawProductTemlate = new Template("#raw-product-temlate");
-
-const rawProductList = $("#raw-product-list");
-const newRawProductEl = $("#new-raw-product");
-
-
-
-newRawProductEl.append(rawProductTemlate.clone());
-const newRawProduct = new RawProduct("new-raw-product").linkToDOM(newRawProductEl);
-
-var config = {
-    apiKey: "AIzaSyAMNUgXUuSzUirS-Ub3fkUXz4BcPqY8gAw",
-    authDomain: "caloriecalc-a8a40.firebaseapp.com",
-    databaseURL: "https://caloriecalc-a8a40.firebaseio.com",
-    storageBucket: "caloriecalc-a8a40.appspot.com",
-};
-firebase.initializeApp(config);
+    const rawProductList = $("#raw-product-list");
+    const newRawProductEl = $("#new-raw-product");
+    const addRawProductEl = $("#add-raw-product");
 
 
 
-var auth = firebase.auth();
-var userPromise = auth.signInWithEmailAndPassword('lomanovvasiliy@gmail.com','235901');
+    newRawProductEl.append(rawProductTemlate.clone());
+    const newRawProduct = new RawProduct({id: "new-raw-product"}).linkToDOM(newRawProductEl);
 
-userPromise.catch(function(err){
-    console.log(err)
-});
 
-userPromise.then(function(user){
-    const rawProductsDB = firebase.database().ref(user.uid).child('raw-products');
+    FirebaseWrapper.signIn('lomanovvasiliy@gmail.com','235901', function(err, uid){
+            if(err) {
+                ErrorWrapper(err);
+            } else {
 
-    rawProductsDB.once("value", function(rawProductsRef) {
+                const DB = new FirebaseWrapper.DB(uid);
+                const rawProductsCollection = DB.getChild('raw-products');
 
-        var rawProducts = Object.keys(rawProductsRef.val()).map(function(id){
-            return new RawProduct(id, rawProductsRef.val()[id], onChange)
+                rawProductsCollection.getValue(function(err, rawProductsRes) {
+                    if(err) {
+                        ErrorWrapper(err);
+                    } else {
+                        Object.keys(rawProductsRes).map(function(id){
+                            var rawProduct = new RawProduct({id: id, items: rawProductsRes[id]}, onChange);
+                            var el = rawProductTemlate.clone();
+                            rawProductList.append(el);
+                            rawProduct.linkToDOM(el);
+                        });
+                    }
+                });
+
+                addRawProductEl.click(function(){
+                    var items = newRawProduct.getItems();
+
+                    rawProductsCollection.push(items, function(err, id){
+                        if(err) {
+                            ErrorWrapper(err);
+                        } else {
+                            var el = rawProductTemlate.clone();
+                            rawProductList.append(el);
+                            new RawProduct({id: id, items: items}).linkToDOM(el);
+                        }
+                    });
+                });
+
+
+                function onChange(p){
+                    rawProductsCollection.getChild(p.id).set(p.getItems());
+                }
+            }
         });
+})();
 
 
-        rawProducts.forEach(function(p){
-            var el = rawProductTemlate.clone();
-            rawProductList.append(el);
-            p.linkToDOM(el);
-        });
-
-        console.log(rawProducts);
-    });
-
-    $("#add-raw-product").click(function(){
-        var items = newRawProduct.getItems();
-
-        rawProductsDB.push(items).then(function(p){
-            var el = rawProductTemlate.clone();
-            rawProductList.append(el);
-            new RawProduct(p.key, items).linkToDOM(el);
-        });
-    });
-
-
-    function onChange(p){
-        rawProductsDB.child(p.id).set(p.getItems());
-    }
-});

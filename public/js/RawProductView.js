@@ -1,21 +1,23 @@
 
 
-function RawProduct(id, p, onChange){
+function RawProduct(p, onChange){
 
-    if (!id)
+    p = p || {};
+    p.items = p.items || {};
+
+    if (!p.id)
         throw new Error("id not specified");
 
-    this.id = id;
+    this.id = p.id;
 
     this.el = {};
 
-    p = p || {};
     this.items = {
-        description:    p.description || "",
-        proteins:       p.proteins || 0,
-        triglyceride:   p.triglyceride || 0,
-        carbohydrate:   p.carbohydrate || 0,
-        calories:       p.calories || 0
+        description:    p.items.description || "",
+        proteins:       p.items.proteins || 0,
+        triglyceride:   p.items.triglyceride || 0,
+        carbohydrate:   p.items.carbohydrate || 0,
+        calories:       p.items.calories || 0
     };
     this.itemsNames = Object.keys(this.items);
 
