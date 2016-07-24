@@ -1,6 +1,6 @@
 
 
-function RawProduct(id, p){
+function RawProduct(id, p, onChange){
 
     if (!id)
         throw new Error("id not specified");
@@ -18,6 +18,8 @@ function RawProduct(id, p){
         calories:       p.calories || 0
     };
     this.itemsNames = Object.keys(this.items);
+
+    this._onChange = onChange;
 }
 
 RawProduct.prototype.linkToDOM = function(d) {
@@ -34,10 +36,7 @@ RawProduct.prototype.linkToDOM = function(d) {
 
 RawProduct.prototype.onChange = function(name) {
     this.items[name] = this.el[name].val();
-    console.log({
-        id: this.id,
-        items: this.items
-    });
+    this._onChange && this._onChange(this);
 };
 
 RawProduct.prototype.getItems = function() {

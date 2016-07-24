@@ -32,6 +32,22 @@ userPromise.catch(function(err){
 
 userPromise.then(function(user){
     const rawProductsDB = firebase.database().ref(user.uid).child('raw-products');
+
+    rawProductsDB.once("value", function(rawProductsRef) {
+        var rawProducts = Object.keys(rawProductsRef.val()).map(function(id){
+            return new RawProduct(id, rawProductsRef[id])
+        });
+
+
+        rawProducts.forEach(function(p){
+            var el = rawProductTemlate.clone();
+            rawProductList.append(el);
+            new RawProduct(p.id, p).linkToDOM(el);
+        });
+
+        console.log(rawProducts);
+    });
+
     $("#add-raw-product").click(function(){
         var items = newRawProduct.getItems();
 
@@ -41,4 +57,9 @@ userPromise.then(function(user){
             new RawProduct(p.key, items).linkToDOM(el);
         });
     });
+
+
+    function onChange(p){
+        console.log(p);
+    }
 });
