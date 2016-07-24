@@ -1,20 +1,21 @@
 
 
-function RawProduct(p){
+function RawProduct(id, p){
 
-    if (p.id !== undefined && p.id != null)
-        this.id = p.id;
-    else
-        this.id = Math.random();
+    if (!id)
+        throw new Error("id not specified");
 
+    this.id = id;
 
     this.el = {};
+
+    p = p || {};
     this.items = {
-        description:    p.description,
-        proteins:       p.proteins | 0,
-        triglyceride:   p.triglyceride | 0,
-        carbohydrate:   p.carbohydrate | 0,
-        calories:       p.calories | 0
+        description:    p.description || "",
+        proteins:       p.proteins || 0,
+        triglyceride:   p.triglyceride || 0,
+        carbohydrate:   p.carbohydrate || 0,
+        calories:       p.calories || 0
     };
     this.itemsNames = Object.keys(this.items);
 }
@@ -39,6 +40,6 @@ RawProduct.prototype.onChange = function(name) {
     });
 };
 
-RawProduct.prototype.cloneWithoutId = function() {
-    return new RawProduct(this.items);
+RawProduct.prototype.getItems = function() {
+    return this.items;
 };
