@@ -34,15 +34,16 @@ userPromise.then(function(user){
     const rawProductsDB = firebase.database().ref(user.uid).child('raw-products');
 
     rawProductsDB.once("value", function(rawProductsRef) {
+
         var rawProducts = Object.keys(rawProductsRef.val()).map(function(id){
-            return new RawProduct(id, rawProductsRef[id])
+            return new RawProduct(id, rawProductsRef.val()[id], onChange)
         });
 
 
         rawProducts.forEach(function(p){
             var el = rawProductTemlate.clone();
             rawProductList.append(el);
-            new RawProduct(p.id, p).linkToDOM(el);
+            p.linkToDOM(el);
         });
 
         console.log(rawProducts);
@@ -60,6 +61,6 @@ userPromise.then(function(user){
 
 
     function onChange(p){
-        console.log(p);
+        rawProductsDB.child(p.id).set(p.getItems());
     }
 });

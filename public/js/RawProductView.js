@@ -28,7 +28,7 @@ RawProduct.prototype.linkToDOM = function(d) {
     this.itemsNames.forEach(function(name){
         this.el[name] = d.find("." + name);
         this.el[name].val(this.items[name]);
-        this.el[name].on("input",this.onChange.bind(this, name));
+        this.el[name].on("change",this.onChange.bind(this, name));
     }.bind(this));
 
     return this;
