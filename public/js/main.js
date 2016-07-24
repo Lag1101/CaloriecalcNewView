@@ -16,46 +16,62 @@
 
 
     FirebaseWrapper.signIn('lomanovvasiliy@gmail.com','235901', function(err, uid){
-            if(err) {
-                ErrorWrapper(err);
-            } else {
+        if(err) {
+            ErrorWrapper(err);
+        } else {
 
-                const DB = new FirebaseWrapper.DB(uid);
-                const rawProductsCollection = DB.getChild('raw-products');
+            const DB = new FirebaseWrapper.DB(uid);
+            const rawProductsCollection = DB.getChild('raw-products');
 
-                rawProductsCollection.getValue(function(err, rawProductsRes) {
+            function removeById(id, el) {
+                rawProductsCollection.getChild(id).remove(function(err){
+                    if(err){
+                        ErrorWrapper(err);
+                    } else {
+                        console.log("removed");
+                        el.remove();
+                    }
+                });
+            }
+
+            rawProductsCollection.getValue(function(err, rawProductsRes) {
+                if(err) {
+                    ErrorWrapper(err);
+                } else {
+                    Object.keys(rawProductsRes).map(function(id){
+                        var el = rawProductTemlate.clone();
+                        rawProductList.append(el);
+
+                        el.find(".remove-raw-product").click(removeById.bind(null, id, el));
+
+                        new RawProduct({id: id, items: rawProductsRes[id]}, onChange).linkToDOM(el);
+                    });
+                }
+            });
+
+            addRawProductEl.click(function(){
+                var items = newRawProduct.getItems();
+
+                rawProductsCollection.push(items, function(err, id){
                     if(err) {
                         ErrorWrapper(err);
                     } else {
-                        Object.keys(rawProductsRes).map(function(id){
-                            var rawProduct = new RawProduct({id: id, items: rawProductsRes[id]}, onChange);
-                            var el = rawProductTemlate.clone();
-                            rawProductList.append(el);
-                            rawProduct.linkToDOM(el);
-                        });
+                        var el = rawProductTemlate.clone();
+                        rawProductList.append(el);
+
+                        el.find(".remove-raw-product").click(removeById.bind(null, id, el));
+
+                        new RawProduct({id: id, items: items}).linkToDOM(el);
                     }
                 });
-
-                addRawProductEl.click(function(){
-                    var items = newRawProduct.getItems();
-
-                    rawProductsCollection.push(items, function(err, id){
-                        if(err) {
-                            ErrorWrapper(err);
-                        } else {
-                            var el = rawProductTemlate.clone();
-                            rawProductList.append(el);
-                            new RawProduct({id: id, items: items}).linkToDOM(el);
-                        }
-                    });
-                });
+            });
 
 
-                function onChange(p){
-                    rawProductsCollection.getChild(p.id).set(p.getItems());
-                }
+            function onChange(p){
+                rawProductsCollection.getChild(p.id).set(p.getItems());
             }
-        });
+        }
+    });
 })();
 
 

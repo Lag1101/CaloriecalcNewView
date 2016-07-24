@@ -18,8 +18,6 @@ const FirebaseWrapper = (function(){
 
     const auth = firebase.auth();
 
-    console.log(auth.currentUser);
-
     FirebaseWrapper.signIn = function(email, pass, cb) {
         auth.signInWithEmailAndPassword(email,pass)
             .catch(function(err){
@@ -78,6 +76,10 @@ const FirebaseWrapper = (function(){
             .then(function(res){
                 return cb && cb(res);
             });
+    };
+
+    FirebaseWrapper.Collection.prototype.remove = function(cb) {
+        this.collection.remove(cb);
     };
 
     return FirebaseWrapper;
