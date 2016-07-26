@@ -3,6 +3,12 @@
  */
 (function(){
 
+    const $ = require("jquery");
+    const Template = require("./Template");
+    const FirebaseWrapper = require("./FirebaseWrapper");
+    const ErrorWrapper = require("./ErrorWrapper");
+    const RawProduct = require("./RawProduct");
+
     const rawProductTemlate = new Template("#raw-product-template");
 
     const rawProductList = $("#raw-product-list");
@@ -15,10 +21,13 @@
     const newRawProduct = new RawProduct({id: "new-raw-product"}).linkToDOM(newRawProductEl);
 
 
+
     FirebaseWrapper.signIn('lomanovvasiliy@gmail.com','235901', function(err, uid){
         if(err) {
             ErrorWrapper(err);
         } else {
+
+            console.log("signed");
 
             const DB = new FirebaseWrapper.DB(uid);
             const rawProductsCollection = DB.getChild('raw-products');
@@ -34,17 +43,21 @@
                 });
             }
 
+            function addRawProductToProductList(id, items) {
+                var el = rawProductTemlate.clone();
+                rawProductList.append(el);
+
+                el.find(".remove-raw-product").click(removeById.bind(null, id, el));
+
+                new RawProduct({id: id, items: items}, {onChange: onChange}).linkToDOM(el);
+            }
+
             rawProductsCollection.getValue(function(err, rawProductsRes) {
                 if(err) {
                     ErrorWrapper(err);
                 } else {
                     Object.keys(rawProductsRes).map(function(id){
-                        var el = rawProductTemlate.clone();
-                        rawProductList.append(el);
-
-                        el.find(".remove-raw-product").click(removeById.bind(null, id, el));
-
-                        new RawProduct({id: id, items: rawProductsRes[id]}, onChange).linkToDOM(el);
+                        addRawProductToProductList(id, rawProductsRes[id]);
                     });
                 }
             });
@@ -56,12 +69,7 @@
                     if(err) {
                         ErrorWrapper(err);
                     } else {
-                        var el = rawProductTemlate.clone();
-                        rawProductList.append(el);
-
-                        el.find(".remove-raw-product").click(removeById.bind(null, id, el));
-
-                        new RawProduct({id: id, items: items}).linkToDOM(el);
+                        addRawProductToProductList(id, items);
                     }
                 });
             });

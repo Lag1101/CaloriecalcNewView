@@ -3,14 +3,16 @@
  */
 
 
-
-const FirebaseWrapper = (function(){
+module.exports = (function(){
     const config = {
         apiKey: "AIzaSyAMNUgXUuSzUirS-Ub3fkUXz4BcPqY8gAw",
         authDomain: "caloriecalc-a8a40.firebaseapp.com",
         databaseURL: "https://caloriecalc-a8a40.firebaseio.com",
         storageBucket: "caloriecalc-a8a40.appspot.com",
     };
+
+    const firebase = require("firebase")
+
     firebase.initializeApp(config);
 
 
@@ -82,5 +84,5 @@ const FirebaseWrapper = (function(){
         this.collection.remove(cb);
     };
 
-    return FirebaseWrapper;
+    return FirebaseWrapper
 })();
