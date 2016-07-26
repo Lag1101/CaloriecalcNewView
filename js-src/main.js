@@ -3,6 +3,7 @@
  */
 (function(){
 
+
     const $ = require("jquery");
     const Template = require("./Template");
     const FirebaseWrapper = require("./FirebaseWrapper");
@@ -32,13 +33,14 @@
             const DB = new FirebaseWrapper.DB(uid);
             const rawProductsCollection = DB.getChild('raw-products');
 
-            function removeById(id, el) {
-                rawProductsCollection.getChild(id).remove(function(err){
+            function removeByProduct(p) {
+                p.applyState("sync");
+                rawProductsCollection.getChild(p.getId()).remove(function(err){
                     if(err){
                         ErrorWrapper(err);
+                        p.applyState("error");
                     } else {
-                        console.log("removed");
-                        el.remove();
+                        p.getEl().remove();
                     }
                 });
             }
@@ -47,9 +49,11 @@
                 var el = rawProductTemplate.clone();
                 rawProductList.append(el);
 
-                el.find(".remove-raw-product").click(removeById.bind(null, id, el));
+                var p = new RawProduct({id: id, items: items}, {onChange: onChange}).linkToDOM(el);
 
-                new RawProduct({id: id, items: items}, {onChange: onChange}).linkToDOM(el);
+                el.find(".remove-raw-product").click(removeByProduct.bind(null, p));
+
+                return p;
             }
 
             rawProductsCollection.getValue(function(err, rawProductsRes) {
@@ -63,20 +67,25 @@
             });
 
             addRawProductEl.click(function(){
-                var items = newRawProduct.getItems();
-
-                rawProductsCollection.push(items, function(err, id){
+                var p = addRawProductToProductList("", newRawProduct.getItems());
+                p.applyState("sync");
+                rawProductsCollection.push(p.getItems(), function(err, id){
                     if(err) {
                         ErrorWrapper(err);
+                        p.applyState("error");
                     } else {
-                        addRawProductToProductList(id, items);
+                        p.setId(id);
+                        p.applyState("ready");
                     }
                 });
             });
 
 
             function onChange(p){
-                rawProductsCollection.getChild(p.id).set(p.getItems());
+                p.applyState("sync");
+                rawProductsCollection.getChild(p.id).set(p.getItems(), function(err){
+                    p.applyState(err ? "error" : "ready");
+                });
             }
         }
     });

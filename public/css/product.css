@@ -1,3 +1,15 @@
 .hidden{
     display: none;
 }
+
+.sync-state{
+    background-color: yellow;
+}
+
+.ready-state{
+
+}
+
+.error-stat{
+    background-color: red;
+}

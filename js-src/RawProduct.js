@@ -7,7 +7,9 @@ module.exports = (function(){
         p.items = p.items || {};
 
         if (!p.id)
-            throw new Error("id not specified");
+            this.state = "sync";
+        else
+            this.state = "ready";
 
         this.id = p.id;
 
@@ -23,10 +25,12 @@ module.exports = (function(){
         this.itemsNames = Object.keys(this.items);
 
         this.params = params || {};
+
     }
 
     RawProduct.prototype.linkToDOM = function(d) {
         this.root =    d;
+        this.applyState("ready");
 
         this.itemsNames.forEach(function(name){
             this.el[name] = d.find("." + name);
@@ -44,6 +48,38 @@ module.exports = (function(){
 
     RawProduct.prototype.getItems = function() {
         return this.items;
+    };
+
+    RawProduct.StateClass = {
+        sync: "sync-state",
+        ready: "ready-state",
+        error: "error-state"
+    };
+
+    RawProduct.prototype.applyState = function(state) {
+        if(!state || state === this.state || Object.keys(RawProduct.StateClass).indexOf(state) < 0 )
+            return;
+
+        this.root && this.root.removeClass(RawProduct.StateClass[this.state]);
+        this.root && this.root.addClass(RawProduct.StateClass[state]);
+
+        this.setState(state);
+    };
+
+    RawProduct.prototype.setState = function(state) {
+        this.state = state;
+    };
+
+    RawProduct.prototype.setId = function(id) {
+        this.id = id;
+    };
+
+    RawProduct.prototype.getId = function() {
+        return this.id;
+    };
+
+    RawProduct.prototype.getEl = function() {
+        return this.root;
     };
 
     return RawProduct;
