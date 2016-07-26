@@ -9,7 +9,7 @@
     const ErrorWrapper = require("./ErrorWrapper");
     const RawProduct = require("./RawProduct");
 
-    const rawProductTemlate = new Template("#raw-product-template");
+    const rawProductTemplate = new Template("#raw-product-template");
 
     const rawProductList = $("#raw-product-list");
     const newRawProductEl = $("#new-raw-product");
@@ -17,7 +17,7 @@
 
 
 
-    newRawProductEl.append(rawProductTemlate.clone());
+    newRawProductEl.append(rawProductTemplate.clone());
     const newRawProduct = new RawProduct({id: "new-raw-product"}).linkToDOM(newRawProductEl);
 
 
@@ -44,7 +44,7 @@
             }
 
             function addRawProductToProductList(id, items) {
-                var el = rawProductTemlate.clone();
+                var el = rawProductTemplate.clone();
                 rawProductList.append(el);
 
                 el.find(".remove-raw-product").click(removeById.bind(null, id, el));
