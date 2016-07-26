@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "jquery": "~3.1.0",
-    "firebase": "~3.2.0"
+    "firebase": "~3.2.0",
+    "pubsub-js": "~1.5.3"
   },
   "devDependencies": {
     "webpack": "latest"

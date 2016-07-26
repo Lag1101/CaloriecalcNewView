@@ -1,7 +1,10 @@
 
-
+//{
+//    name: "description",
+//    default: ""
+//}
 module.exports = (function(){
-    function RawProduct(p, params){
+    function TemplateProduct(fields, p, params){
 
         p = p || {};
         p.items = p.items || {};
@@ -15,20 +18,18 @@ module.exports = (function(){
 
         this.el = {};
 
-        this.items = {
-            description:    p.items.description || "",
-            proteins:       p.items.proteins || 0,
-            triglyceride:   p.items.triglyceride || 0,
-            carbohydrate:   p.items.carbohydrate || 0,
-            calories:       p.items.calories || 0
-        };
+        this.items = {};
+        fields.forEach(function(f){
+            this.items[f.name] = p.items[f.name] || f.default;
+        }.bind(this));
+
         this.itemsNames = Object.keys(this.items);
 
         this.params = params || {};
 
     }
 
-    RawProduct.prototype.linkToDOM = function(d) {
+    TemplateProduct.prototype.linkToDOM = function(d) {
         this.root =    d;
         this.applyState("ready");
 
@@ -41,46 +42,46 @@ module.exports = (function(){
         return this;
     };
 
-    RawProduct.prototype.onChange = function(name) {
+    TemplateProduct.prototype.onChange = function(name) {
         this.items[name] = this.el[name].val();
         this.params.onChange && this.params.onChange(this);
     };
 
-    RawProduct.prototype.getItems = function() {
+    TemplateProduct.prototype.getItems = function() {
         return this.items;
     };
 
-    RawProduct.StateClass = {
+    TemplateProduct.StateClass = {
         sync: "sync-state",
         ready: "ready-state",
         error: "error-state"
     };
 
-    RawProduct.prototype.applyState = function(state) {
-        if(!state || state === this.state || Object.keys(RawProduct.StateClass).indexOf(state) < 0 )
+    TemplateProduct.prototype.applyState = function(state) {
+        if(!state || state === this.state || Object.keys(TemplateProduct.StateClass).indexOf(state) < 0 )
             return;
 
-        this.root && this.root.removeClass(RawProduct.StateClass[this.state]);
-        this.root && this.root.addClass(RawProduct.StateClass[state]);
+        this.root && this.root.removeClass(TemplateProduct.StateClass[this.state]);
+        this.root && this.root.addClass(TemplateProduct.StateClass[state]);
 
         this.setState(state);
     };
 
-    RawProduct.prototype.setState = function(state) {
+    TemplateProduct.prototype.setState = function(state) {
         this.state = state;
     };
 
-    RawProduct.prototype.setId = function(id) {
+    TemplateProduct.prototype.setId = function(id) {
         this.id = id;
     };
 
-    RawProduct.prototype.getId = function() {
+    TemplateProduct.prototype.getId = function() {
         return this.id;
     };
 
-    RawProduct.prototype.getEl = function() {
+    TemplateProduct.prototype.getEl = function() {
         return this.root;
     };
 
-    return RawProduct;
+    return TemplateProduct;
 })();

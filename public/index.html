@@ -7,21 +7,41 @@
     <link rel="stylesheet" type="text/css" href="css/product.css">
 </head>
 <body>
-    <button id="add-raw-product">add</button>
-    <div id="new-raw-product"></div>
-    <div id="raw-product-list"></div>
+    <div id="raw-product-list">
+        <div>
+            <button id="add-raw-product">add</button>
+            <div id="new-raw-product"></div>
+        </div>
+        <h1>Продукты</h1>
+    </div>
 
-    <div id="components-list"></div>
+    <div id="components-list">
+        <h1>Компоненты блюда</h1>
+    </div>
 
+    <div id="component-template" class="hidden">
+        <div>
+            <button class="remove-component">-</button>
+            <div class="component">
+                <input type="text" name="description" placeholder="описание" class="component-item description">
+                <input type="number" name="proteins" min="0" placeholder="белки" class="component-item proteins">
+                <input type="number" name="triglyceride" min="0" placeholder="жиры" class="component-item triglyceride">
+                <input type="number" name="carbohydrate " min="0" placeholder="углеводы" class="component-item carbohydrate">
+                <input type="number" name="calories" min="0" placeholder="углеводы" class="component-item calories">
+                <input type="number" name="mass" min="0" placeholder="масса, гр" class="product-item mass">
+            </div>
+        </div>
+    </div>
     <div id="raw-product-template" class="hidden">
         <div>
+            <button class="add-to-components">+</button>
             <button class="remove-raw-product">-</button>
             <div class="raw-product">
                 <input type="text" name="description" placeholder="описание" class="product-item description">
-                <input type="number" name="proteins" placeholder="белки" class="product-item proteins">
-                <input type="number" name="triglyceride" placeholder="жиры" class="product-item triglyceride">
-                <input type="number" name="carbohydrate " placeholder="углеводы" class="product-item carbohydrate">
-                <input type="number" name="calories" placeholder="углеводы" class="product-item calories">
+                <input type="number" name="proteins" min="0" placeholder="белки" class="product-item proteins">
+                <input type="number" name="triglyceride" min="0" placeholder="жиры" class="product-item triglyceride">
+                <input type="number" name="carbohydrate " min="0" placeholder="углеводы" class="product-item carbohydrate">
+                <input type="number" name="calories" min="0" placeholder="углеводы" class="product-item calories">
             </div>
         </div>
     </div>

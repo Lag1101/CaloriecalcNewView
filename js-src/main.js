@@ -15,6 +15,8 @@
             ErrorWrapper(err);
         } else {
             const DB = new FirebaseWrapper.DB(uid);
+
+            require("./ComponentsControl")(DB);
             require("./RawProductsControl")(DB);
         }
     });

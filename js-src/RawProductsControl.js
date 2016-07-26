@@ -7,10 +7,15 @@ module.exports = (function(){
 
     const $ = require("jquery");
     const Template = require("./Template");
-    const FirebaseWrapper = require("./FirebaseWrapper");
     const ErrorWrapper = require("./ErrorWrapper");
-    const RawProduct = require("./RawProduct");
-
+    const RawProduct = require("./TemplateProduct").bind(null , [
+            {name: "description", default: ""},
+            {name: "proteins", default: 0},
+            {name: "triglyceride", default: 0},
+            {name: "carbohydrate ", default: 0},
+            {name: "calories", default: 0}
+    ]);
+    const PubSub = require("pubsub-js");
     const rawProductTemplate = new Template("#raw-product-template");
 
     const rawProductList = $("#raw-product-list");
@@ -38,6 +43,10 @@ module.exports = (function(){
             });
         }
 
+        function addToComponents(p) {
+            PubSub.publish( 'AddRawProductToComponents', p.getItems() );
+        }
+
         function addRawProductToProductList(id, items) {
             var el = rawProductTemplate.clone();
             rawProductList.append(el);
@@ -45,6 +54,7 @@ module.exports = (function(){
             var p = new RawProduct({id: id, items: items}, {onChange: onChange}).linkToDOM(el);
 
             el.find(".remove-raw-product").click(removeByProduct.bind(null, p));
+            el.find(".add-to-components").click(addToComponents.bind(null, p));
 
             return p;
         }

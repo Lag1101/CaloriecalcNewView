@@ -62,8 +62,8 @@
 
 
 	    const $ = __webpack_require__(2);
-	    const FirebaseWrapper = __webpack_require__(4);
-	    const ErrorWrapper = __webpack_require__(7);
+	    const FirebaseWrapper = __webpack_require__(3);
+	    const ErrorWrapper = __webpack_require__(6);
 
 
 
@@ -72,7 +72,9 @@
 	            ErrorWrapper(err);
 	        } else {
 	            const DB = new FirebaseWrapper.DB(uid);
-	            __webpack_require__(9)(DB);
+
+	            __webpack_require__(7)(DB);
+	            __webpack_require__(11)(DB);
 	        }
 	    });
 	})();
@@ -10165,30 +10167,6 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
-	 * Created by LuckyBug on 23.07.2016.
-	 */
-
-	const $ = __webpack_require__(2);
-
-	module.exports = (function(){
-
-
-	    function Template(id) {
-	        this.el = $(id);
-	    }
-
-	    Template.prototype.clone = function() {
-	        return this.el.children().clone();
-	    };
-	    return Template;
-	})();
-
-
-/***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
 	 * Created by LuckyBug on 24.07.2016.
 	 */
 
@@ -10201,7 +10179,7 @@
 	        storageBucket: "caloriecalc-a8a40.appspot.com",
 	    };
 
-	    const firebase = __webpack_require__(5)
+	    const firebase = __webpack_require__(4)
 
 	    firebase.initializeApp(config);
 
@@ -10279,7 +10257,7 @@
 
 
 /***/ },
-/* 5 */
+/* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -10289,12 +10267,12 @@
 	 *
 	 *   firebase = require('firebase');
 	 */
-	__webpack_require__(6);
+	__webpack_require__(5);
 	module.exports = firebase;
 
 
 /***/ },
-/* 6 */
+/* 5 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/*! @license Firebase v3.2.1
@@ -10868,7 +10846,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 7 */
+/* 6 */
 /***/ function(module, exports) {
 
 	/**
@@ -10883,13 +10861,130 @@
 	})();
 
 /***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Created by LuckyBug on 26.07.2016.
+	 */
+
+	module.exports = (function(){
+
+
+	    const $ = __webpack_require__(2);
+	    const Template = __webpack_require__(8);
+	    const ErrorWrapper = __webpack_require__(6);
+	    const Component = __webpack_require__(9).bind(null , [
+	        {name: "description", default: ""},
+	        {name: "proteins", default: 0},
+	        {name: "triglyceride", default: 0},
+	        {name: "carbohydrate ", default: 0},
+	        {name: "calories", default: 0},
+	        {name: "mass", default: 100}
+	    ]);
+	    const PubSub = __webpack_require__(10);
+
+	    const template = new Template("#component-template");
+
+	    const list = $("#components-list");
+
+
+	    function onUserReady(DB) {
+	        const collection = DB.getChild('components');
+
+	        function remove(p) {
+	            p.applyState("sync");
+	            collection.getChild(p.getId()).remove(function(err){
+	                if(err){
+	                    ErrorWrapper(err);
+	                    p.applyState("error");
+	                } else {
+	                    p.getEl().remove();
+	                }
+	            });
+	        }
+
+	        function addToList(id, items) {
+	            var el = template.clone();
+	            list.append(el);
+
+	            var p = new Component({id: id, items: items}, {onChange: onChange}).linkToDOM(el);
+
+	            el.find(".remove-component").click(remove.bind(null, p));
+
+	            return p;
+	        }
+
+	        PubSub.subscribe( 'AddRawProductToComponents', function(msg, items){
+	            var p = addToList("", items);
+	            p.applyState("sync");
+	            collection.push(p.getItems(), function(err, id){
+	                if(err) {
+	                    ErrorWrapper(err);
+	                    p.applyState("error");
+	                } else {
+	                    p.setId(id);
+	                    p.applyState("ready");
+	                }
+	            });
+	        });
+
+	        collection.getValue(function(err, componentsRes) {
+	            if(err) {
+	                ErrorWrapper(err);
+	            } else {
+	                Object.keys(componentsRes).map(function(id){
+	                    addToList(id, componentsRes[id]);
+	                });
+	            }
+	        });
+
+
+	        function onChange(p){
+	            p.applyState("sync");
+	            collection.getChild(p.id).set(p.getItems(), function(err){
+	                p.applyState(err ? "error" : "ready");
+	            });
+	        }
+	    }
+	    return onUserReady;
+	})();
+
+/***/ },
 /* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Created by LuckyBug on 23.07.2016.
+	 */
+
+	const $ = __webpack_require__(2);
+
+	module.exports = (function(){
+
+
+	    function Template(id) {
+	        this.el = $(id);
+	    }
+
+	    Template.prototype.clone = function() {
+	        return this.el.children().clone();
+	    };
+	    return Template;
+	})();
+
+
+/***/ },
+/* 9 */
 /***/ function(module, exports) {
 
 	
-
+	//{
+	//    name: "description",
+	//    default: ""
+	//}
 	module.exports = (function(){
-	    function RawProduct(p, params){
+	    function TemplateProduct(fields, p, params){
 
 	        p = p || {};
 	        p.items = p.items || {};
@@ -10903,20 +10998,18 @@
 
 	        this.el = {};
 
-	        this.items = {
-	            description:    p.items.description || "",
-	            proteins:       p.items.proteins || 0,
-	            triglyceride:   p.items.triglyceride || 0,
-	            carbohydrate:   p.items.carbohydrate || 0,
-	            calories:       p.items.calories || 0
-	        };
+	        this.items = {};
+	        fields.forEach(function(f){
+	            this.items[f.name] = p.items[f.name] || f.default;
+	        }.bind(this));
+
 	        this.itemsNames = Object.keys(this.items);
 
 	        this.params = params || {};
 
 	    }
 
-	    RawProduct.prototype.linkToDOM = function(d) {
+	    TemplateProduct.prototype.linkToDOM = function(d) {
 	        this.root =    d;
 	        this.applyState("ready");
 
@@ -10929,53 +11022,304 @@
 	        return this;
 	    };
 
-	    RawProduct.prototype.onChange = function(name) {
+	    TemplateProduct.prototype.onChange = function(name) {
 	        this.items[name] = this.el[name].val();
 	        this.params.onChange && this.params.onChange(this);
 	    };
 
-	    RawProduct.prototype.getItems = function() {
+	    TemplateProduct.prototype.getItems = function() {
 	        return this.items;
 	    };
 
-	    RawProduct.StateClass = {
+	    TemplateProduct.StateClass = {
 	        sync: "sync-state",
 	        ready: "ready-state",
 	        error: "error-state"
 	    };
 
-	    RawProduct.prototype.applyState = function(state) {
-	        if(!state || state === this.state || Object.keys(RawProduct.StateClass).indexOf(state) < 0 )
+	    TemplateProduct.prototype.applyState = function(state) {
+	        if(!state || state === this.state || Object.keys(TemplateProduct.StateClass).indexOf(state) < 0 )
 	            return;
 
-	        this.root && this.root.removeClass(RawProduct.StateClass[this.state]);
-	        this.root && this.root.addClass(RawProduct.StateClass[state]);
+	        this.root && this.root.removeClass(TemplateProduct.StateClass[this.state]);
+	        this.root && this.root.addClass(TemplateProduct.StateClass[state]);
 
 	        this.setState(state);
 	    };
 
-	    RawProduct.prototype.setState = function(state) {
+	    TemplateProduct.prototype.setState = function(state) {
 	        this.state = state;
 	    };
 
-	    RawProduct.prototype.setId = function(id) {
+	    TemplateProduct.prototype.setId = function(id) {
 	        this.id = id;
 	    };
 
-	    RawProduct.prototype.getId = function() {
+	    TemplateProduct.prototype.getId = function() {
 	        return this.id;
 	    };
 
-	    RawProduct.prototype.getEl = function() {
+	    TemplateProduct.prototype.getEl = function() {
 	        return this.root;
 	    };
 
-	    return RawProduct;
+	    return TemplateProduct;
 	})();
 
 
 /***/ },
-/* 9 */
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*
+	Copyright (c) 2010,2011,2012,2013,2014 Morgan Roderick http://roderick.dk
+	License: MIT - http://mrgnrdrck.mit-license.org
+
+	https://github.com/mroderick/PubSubJS
+	*/
+	(function (root, factory){
+		'use strict';
+
+	    if (true){
+	        // AMD. Register as an anonymous module.
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [exports], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+	    } else if (typeof exports === 'object'){
+	        // CommonJS
+	        factory(exports);
+
+	    }
+
+	    // Browser globals
+	    var PubSub = {};
+	    root.PubSub = PubSub;
+	    factory(PubSub);
+	    
+	}(( typeof window === 'object' && window ) || this, function (PubSub){
+		'use strict';
+
+		var messages = {},
+			lastUid = -1;
+
+		function hasKeys(obj){
+			var key;
+
+			for (key in obj){
+				if ( obj.hasOwnProperty(key) ){
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/**
+		 *	Returns a function that throws the passed exception, for use as argument for setTimeout
+		 *	@param { Object } ex An Error object
+		 */
+		function throwException( ex ){
+			return function reThrowException(){
+				throw ex;
+			};
+		}
+
+		function callSubscriberWithDelayedExceptions( subscriber, message, data ){
+			try {
+				subscriber( message, data );
+			} catch( ex ){
+				setTimeout( throwException( ex ), 0);
+			}
+		}
+
+		function callSubscriberWithImmediateExceptions( subscriber, message, data ){
+			subscriber( message, data );
+		}
+
+		function deliverMessage( originalMessage, matchedMessage, data, immediateExceptions ){
+			var subscribers = messages[matchedMessage],
+				callSubscriber = immediateExceptions ? callSubscriberWithImmediateExceptions : callSubscriberWithDelayedExceptions,
+				s;
+
+			if ( !messages.hasOwnProperty( matchedMessage ) ) {
+				return;
+			}
+
+			for (s in subscribers){
+				if ( subscribers.hasOwnProperty(s)){
+					callSubscriber( subscribers[s], originalMessage, data );
+				}
+			}
+		}
+
+		function createDeliveryFunction( message, data, immediateExceptions ){
+			return function deliverNamespaced(){
+				var topic = String( message ),
+					position = topic.lastIndexOf( '.' );
+
+				// deliver the message as it is now
+				deliverMessage(message, message, data, immediateExceptions);
+
+				// trim the hierarchy and deliver message to each level
+				while( position !== -1 ){
+					topic = topic.substr( 0, position );
+					position = topic.lastIndexOf('.');
+					deliverMessage( message, topic, data, immediateExceptions );
+				}
+			};
+		}
+
+		function messageHasSubscribers( message ){
+			var topic = String( message ),
+				found = Boolean(messages.hasOwnProperty( topic ) && hasKeys(messages[topic])),
+				position = topic.lastIndexOf( '.' );
+
+			while ( !found && position !== -1 ){
+				topic = topic.substr( 0, position );
+				position = topic.lastIndexOf( '.' );
+				found = Boolean(messages.hasOwnProperty( topic ) && hasKeys(messages[topic]));
+			}
+
+			return found;
+		}
+
+		function publish( message, data, sync, immediateExceptions ){
+			var deliver = createDeliveryFunction( message, data, immediateExceptions ),
+				hasSubscribers = messageHasSubscribers( message );
+
+			if ( !hasSubscribers ){
+				return false;
+			}
+
+			if ( sync === true ){
+				deliver();
+			} else {
+				setTimeout( deliver, 0 );
+			}
+			return true;
+		}
+
+		/**
+		 *	PubSub.publish( message[, data] ) -> Boolean
+		 *	- message (String): The message to publish
+		 *	- data: The data to pass to subscribers
+		 *	Publishes the the message, passing the data to it's subscribers
+		**/
+		PubSub.publish = function( message, data ){
+			return publish( message, data, false, PubSub.immediateExceptions );
+		};
+
+		/**
+		 *	PubSub.publishSync( message[, data] ) -> Boolean
+		 *	- message (String): The message to publish
+		 *	- data: The data to pass to subscribers
+		 *	Publishes the the message synchronously, passing the data to it's subscribers
+		**/
+		PubSub.publishSync = function( message, data ){
+			return publish( message, data, true, PubSub.immediateExceptions );
+		};
+
+		/**
+		 *	PubSub.subscribe( message, func ) -> String
+		 *	- message (String): The message to subscribe to
+		 *	- func (Function): The function to call when a new message is published
+		 *	Subscribes the passed function to the passed message. Every returned token is unique and should be stored if
+		 *	you need to unsubscribe
+		**/
+		PubSub.subscribe = function( message, func ){
+			if ( typeof func !== 'function'){
+				return false;
+			}
+
+			// message is not registered yet
+			if ( !messages.hasOwnProperty( message ) ){
+				messages[message] = {};
+			}
+
+			// forcing token as String, to allow for future expansions without breaking usage
+			// and allow for easy use as key names for the 'messages' object
+			var token = 'uid_' + String(++lastUid);
+			messages[message][token] = func;
+
+			// return token for unsubscribing
+			return token;
+		};
+
+		/* Public: Clears all subscriptions
+		 */
+		PubSub.clearAllSubscriptions = function clearAllSubscriptions(){
+			messages = {};
+		};
+
+		/*Public: Clear subscriptions by the topic
+		*/
+		PubSub.clearSubscriptions = function clearSubscriptions(topic){
+			var m; 
+			for (m in messages){
+				if (messages.hasOwnProperty(m) && m.indexOf(topic) === 0){
+					delete messages[m];
+				}
+			}
+		};
+
+		/* Public: removes subscriptions.
+		 * When passed a token, removes a specific subscription.
+		 * When passed a function, removes all subscriptions for that function
+		 * When passed a topic, removes all subscriptions for that topic (hierarchy)
+		 *
+		 * value - A token, function or topic to unsubscribe.
+		 *
+		 * Examples
+		 *
+		 *		// Example 1 - unsubscribing with a token
+		 *		var token = PubSub.subscribe('mytopic', myFunc);
+		 *		PubSub.unsubscribe(token);
+		 *
+		 *		// Example 2 - unsubscribing with a function
+		 *		PubSub.unsubscribe(myFunc);
+		 *
+		 *		// Example 3 - unsubscribing a topic
+		 *		PubSub.unsubscribe('mytopic');
+		 */
+		PubSub.unsubscribe = function(value){
+			var isTopic    = typeof value === 'string' && messages.hasOwnProperty(value),
+				isToken    = !isTopic && typeof value === 'string',
+				isFunction = typeof value === 'function',
+				result = false,
+				m, message, t;
+
+			if (isTopic){
+				delete messages[value];
+				return;
+			}
+
+			for ( m in messages ){
+				if ( messages.hasOwnProperty( m ) ){
+					message = messages[m];
+
+					if ( isToken && message[value] ){
+						delete message[value];
+						result = value;
+						// tokens are unique, so we can just stop here
+						break;
+					}
+
+					if (isFunction) {
+						for ( t in message ){
+							if (message.hasOwnProperty(t) && message[t] === value){
+								delete message[t];
+								result = true;
+							}
+						}
+					}
+				}
+			}
+
+			return result;
+		};
+	}));
+
+
+/***/ },
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -10986,11 +11330,16 @@
 
 
 	    const $ = __webpack_require__(2);
-	    const Template = __webpack_require__(3);
-	    const FirebaseWrapper = __webpack_require__(4);
-	    const ErrorWrapper = __webpack_require__(7);
-	    const RawProduct = __webpack_require__(8);
-
+	    const Template = __webpack_require__(8);
+	    const ErrorWrapper = __webpack_require__(6);
+	    const RawProduct = __webpack_require__(9).bind(null , [
+	            {name: "description", default: ""},
+	            {name: "proteins", default: 0},
+	            {name: "triglyceride", default: 0},
+	            {name: "carbohydrate ", default: 0},
+	            {name: "calories", default: 0}
+	    ]);
+	    const PubSub = __webpack_require__(10);
 	    const rawProductTemplate = new Template("#raw-product-template");
 
 	    const rawProductList = $("#raw-product-list");
@@ -11018,6 +11367,10 @@
 	            });
 	        }
 
+	        function addToComponents(p) {
+	            PubSub.publish( 'AddRawProductToComponents', p.getItems() );
+	        }
+
 	        function addRawProductToProductList(id, items) {
 	            var el = rawProductTemplate.clone();
 	            rawProductList.append(el);
@@ -11025,6 +11378,7 @@
 	            var p = new RawProduct({id: id, items: items}, {onChange: onChange}).linkToDOM(el);
 
 	            el.find(".remove-raw-product").click(removeByProduct.bind(null, p));
+	            el.find(".add-to-components").click(addToComponents.bind(null, p));
 
 	            return p;
 	        }
