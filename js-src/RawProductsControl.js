@@ -12,7 +12,7 @@ module.exports = (function(){
             {name: "description", default: ""},
             {name: "proteins", default: 0},
             {name: "triglyceride", default: 0},
-            {name: "carbohydrate ", default: 0},
+            {name: "carbohydrate", default: 0},
             {name: "calories", default: 0}
     ]);
     const PubSub = require("pubsub-js");

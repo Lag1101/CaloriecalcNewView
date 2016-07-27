@@ -61,7 +61,7 @@
 	(function(){
 	    const FirebaseWrapper = __webpack_require__(2);
 	    const ErrorWrapper = __webpack_require__(5);
-
+	    const TemplateList = __webpack_require__(13);
 
 
 	    FirebaseWrapper.signIn('lomanovvasiliy@gmail.com','235901', function(err, uid){
@@ -70,9 +70,9 @@
 	        } else {
 	            const DB = new FirebaseWrapper.DB(uid);
 
-	            __webpack_require__(6)(DB);
 	            __webpack_require__(11)(DB);
 	            __webpack_require__(12)(DB);
+	            __webpack_require__(6)(DB);
 	        }
 	    });
 	})();
@@ -788,102 +788,56 @@
 
 	module.exports = (function(){
 
-
 	    const $ = __webpack_require__(7);
-	    const Template = __webpack_require__(8);
 	    const ErrorWrapper = __webpack_require__(5);
+	    const TemplateList = __webpack_require__(13);
+	    const Template = __webpack_require__(8);
+	    const PubSub = __webpack_require__(10);
+
 	    const Component = __webpack_require__(9).bind(null , [
 	        {name: "description", default: ""},
 	        {name: "proteins", default: 0},
 	        {name: "triglyceride", default: 0},
-	        {name: "carbohydrate ", default: 0},
+	        {name: "carbohydrate", default: 0},
 	        {name: "calories", default: 0},
 	        {name: "mass", default: 100}
 	    ]);
-	    const PubSub = __webpack_require__(10);
 
-	    const template = new Template("#component-template");
-
-	    const list = $("#components-list");
-
-
-	    function onUserReady(DB) {
-	        const collection = DB.getChild('components');
-
-	        collection.getValue(function(err, componentsRes) {
-	            if(err) {
-	                ErrorWrapper(err);
-	            } else {
-	                onGetComponents(componentsRes);
-	            }
-	        });
-
-	        function onGetComponents(componentsRes){
-	            var components = componentsRes ? Object.keys(componentsRes).map(function(id){
-	                return addToList(id, componentsRes[id]);
-	            }) : [];
-
-	            PubSub.publish( 'ComponentsListReady', components );
-
-	            function remove(p) {
-	                p.applyState("sync");
-	                collection.getChild(p.getId()).remove(function(err){
-	                    if(err){
-	                        ErrorWrapper(err);
-	                        p.applyState("error");
-	                    } else {
-	                    }
-	                });
-
-	                PubSub.publish( 'ComponentChanged', {
-	                    prev: new Component({items: p.getItems()}),
-	                    current: new Component()
-	                } );
-	                p.getEl().remove();
-	            }
-
-	            function addToList(id, items) {
-	                var el = template.clone();
-	                list.append(el);
-
-	                var p = new Component({id: id, items: items}, {onChange: onChange}).linkToDOM(el);
-
-	                el.find(".remove-component").click(remove.bind(null, p));
-
-	                return p;
-	            }
-
-	            PubSub.subscribe( 'AddRawProductToComponents', function(msg, items){
-	                var p = addToList("", items);
-	                p.applyState("sync");
-	                collection.push(p.getItems(), function(err, id){
-	                    if(err) {
-	                        ErrorWrapper(err);
-	                        p.applyState("error");
-	                    } else {
-	                        p.setId(id);
-	                        p.applyState("ready");
-	                    }
-	                });
-	                PubSub.publish( 'ComponentChanged', {
-	                    prev: new Component(),
-	                    current: new Component({items: items})
-	                } );
-	            });
-
-	            function onChange(prev, current){
-	                current.applyState("sync");
-	                collection.getChild(current.getId()).set(current.getItems(), function(err){
-	                    current.applyState(err ? "error" : "ready");
-	                });
+	    function onDBReady(DB) {
+	        const componentsList = new TemplateList({
+	            collection:  DB.getChild('components'),
+	            changed: function(prev, current) {
 	                PubSub.publish( 'ComponentChanged', {
 	                    prev: prev,
 	                    current: current
 	                } );
-	            }
-	        }
+	            },
+	            removed: function (p) {
+	                PubSub.publish( 'ComponentChanged', {
+	                    prev: new Component({items: p.getItems()}),
+	                    current: new Component()
+	                } );
+	            },
+	            added: function (p) {
+	                PubSub.publish( 'ComponentChanged', {
+	                    prev: new Component(),
+	                    current: new Component({items: p.getItems()})
+	                } );
+	            },
+	            got: function (products) {
+	                PubSub.publish( 'ComponentsListReady', products );
+	            },
+
+	            TemplateProduct: Component,
+	            listEl: $("#components-list"),
+	            template: new Template("#component-template")
+	        });
+	        PubSub.subscribe( 'AddRawProductToComponents', function(msg, items){
+	            componentsList.addProduct(items);
+	        });
 	    }
-	    return onUserReady;
+
+	    return onDBReady;
 	})();
 
 /***/ },
@@ -11034,6 +10988,8 @@
 	            var el = d.find("." + name);
 	            el.val(this.items[name]);
 	            el.on("change",this.onChange.bind(this, name));
+	            if(this.el[name])
+	                this.el[name].off("change");
 	            this.el[name] = el;
 	        }.bind(this));
 
@@ -11370,7 +11326,7 @@
 	            {name: "description", default: ""},
 	            {name: "proteins", default: 0},
 	            {name: "triglyceride", default: 0},
-	            {name: "carbohydrate ", default: 0},
+	            {name: "carbohydrate", default: 0},
 	            {name: "calories", default: 0}
 	    ]);
 	    const PubSub = __webpack_require__(10);
@@ -11624,6 +11580,101 @@
 	        }
 	    }
 	    return onUserReady;
+	})();
+
+/***/ },
+/* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Created by luckybug on 27.07.16.
+	 */
+
+	module.exports = (function(){
+
+	    const ErrorWrapper = __webpack_require__(5);
+
+	    function ListTemplate(params) {
+
+	        this.params = params || {};
+	        this.collection = this.params.collection;
+	        this.template = this.params.template;
+	        this.listEl = this.params.listEl;
+	        this.TemplateProduct = this.params.TemplateProduct;
+
+
+	        this.collection.getValue(function(err, res) {
+	            if(err) {
+	                ErrorWrapper(err);
+	            } else {
+	                this.onGet(res);
+	            }
+	        }.bind(this));
+
+	    }
+
+	    ListTemplate.prototype.onGet = function(componentsRes){
+	        var components = componentsRes ? Object.keys(componentsRes).map(function(id){
+	            return this.addToList(id, componentsRes[id]);
+	        }.bind(this)) : [];
+
+	        this.params.got && this.params.got(components);
+	    };
+
+	    ListTemplate.prototype.onChange = function(prev, current){
+	        current.applyState("sync");
+	        this.collection.getChild(current.getId()).set(current.getItems(), function(err){
+	            current.applyState(err ? "error" : "ready");
+	        });
+
+	        this.params.changed && this.params.changed(prev, current);
+	    };
+
+	    ListTemplate.prototype.addToList = function(id, items) {
+	        var el = this.template.clone();
+	        this.listEl.append(el);
+
+	        var p = new this.TemplateProduct({id: id, items: items}, {onChange: this.onChange.bind(this)}).linkToDOM(el);
+
+	        el.find(".remove-component").click(this.remove.bind(this, p));
+
+	        return p;
+	    };
+
+	    ListTemplate.prototype.addProduct = function(items) {
+	        var p = this.addToList("", items);
+	        p.applyState("sync");
+	        this.collection.push(p.getItems(), function(err, id){
+	            if(err) {
+	                ErrorWrapper(err);
+	                p.applyState("error");
+	            } else {
+	                p.setId(id);
+	                p.applyState("ready");
+	            }
+	        });
+	        this.params.added && this.params.added(p);
+	    };
+
+	    ListTemplate.prototype.remove = function(p) {
+	        p.applyState("sync");
+	        this.collection.getChild(p.getId()).remove(function(err){
+	            if(err){
+	                ErrorWrapper(err);
+	                var el = this.template.clone();
+	                this.listEl.append(el);
+	                p.linkToDOM(el);
+	                p.applyState("error");
+	            } else {
+
+	            }
+	        }.bind(this));
+	        p.getEl().remove();
+
+	        this.params.removed && this.params.removed(p);
+	    };
+
+	    return ListTemplate;
 	})();
 
 /***/ }

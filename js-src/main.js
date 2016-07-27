@@ -4,7 +4,7 @@
 (function(){
     const FirebaseWrapper = require("./FirebaseWrapper");
     const ErrorWrapper = require("./ErrorWrapper");
-
+    const TemplateList = require("./TemplateList");
 
 
     FirebaseWrapper.signIn('lomanovvasiliy@gmail.com','235901', function(err, uid){
@@ -13,9 +13,9 @@
         } else {
             const DB = new FirebaseWrapper.DB(uid);
 
-            require("./ComponentsControl")(DB);
             require("./RawProductsControl")(DB);
             require("./DishesControl")(DB);
+            require("./ComponentsControl")(DB);
         }
     });
 })();

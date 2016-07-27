@@ -38,6 +38,8 @@ module.exports = (function(){
             var el = d.find("." + name);
             el.val(this.items[name]);
             el.on("change",this.onChange.bind(this, name));
+            if(this.el[name])
+                this.el[name].off("change");
             this.el[name] = el;
         }.bind(this));
 
