@@ -26,59 +26,77 @@ module.exports = (function(){
     function onUserReady(DB) {
         const collection = DB.getChild('components');
 
-        function remove(p) {
-            p.applyState("sync");
-            collection.getChild(p.getId()).remove(function(err){
-                if(err){
-                    ErrorWrapper(err);
-                    p.applyState("error");
-                } else {
-                    p.getEl().remove();
-                }
-            });
-        }
-
-        function addToList(id, items) {
-            var el = template.clone();
-            list.append(el);
-
-            var p = new Component({id: id, items: items}, {onChange: onChange}).linkToDOM(el);
-
-            el.find(".remove-component").click(remove.bind(null, p));
-
-            return p;
-        }
-
-        PubSub.subscribe( 'AddRawProductToComponents', function(msg, items){
-            var p = addToList("", items);
-            p.applyState("sync");
-            collection.push(p.getItems(), function(err, id){
-                if(err) {
-                    ErrorWrapper(err);
-                    p.applyState("error");
-                } else {
-                    p.setId(id);
-                    p.applyState("ready");
-                }
-            });
-        });
-
         collection.getValue(function(err, componentsRes) {
             if(err) {
                 ErrorWrapper(err);
             } else {
-                Object.keys(componentsRes).map(function(id){
-                    addToList(id, componentsRes[id]);
-                });
+                onGetComponents(componentsRes);
             }
         });
 
+        function onGetComponents(componentsRes){
+            var components = componentsRes ? Object.keys(componentsRes).map(function(id){
+                return addToList(id, componentsRes[id]);
+            }) : [];
 
-        function onChange(p){
-            p.applyState("sync");
-            collection.getChild(p.id).set(p.getItems(), function(err){
-                p.applyState(err ? "error" : "ready");
+            PubSub.publish( 'ComponentsListReady', components );
+
+            function remove(p) {
+                p.applyState("sync");
+                collection.getChild(p.getId()).remove(function(err){
+                    if(err){
+                        ErrorWrapper(err);
+                        p.applyState("error");
+                    } else {
+                    }
+                });
+
+                PubSub.publish( 'ComponentChanged', {
+                    prev: new Component({items: p.getItems()}),
+                    current: new Component()
+                } );
+                p.getEl().remove();
+            }
+
+            function addToList(id, items) {
+                var el = template.clone();
+                list.append(el);
+
+                var p = new Component({id: id, items: items}, {onChange: onChange}).linkToDOM(el);
+
+                el.find(".remove-component").click(remove.bind(null, p));
+
+                return p;
+            }
+
+            PubSub.subscribe( 'AddRawProductToComponents', function(msg, items){
+                var p = addToList("", items);
+                p.applyState("sync");
+                collection.push(p.getItems(), function(err, id){
+                    if(err) {
+                        ErrorWrapper(err);
+                        p.applyState("error");
+                    } else {
+                        p.setId(id);
+                        p.applyState("ready");
+                    }
+                });
+                PubSub.publish( 'ComponentChanged', {
+                    prev: new Component(),
+                    current: new Component({items: items})
+                } );
             });
+
+            function onChange(prev, current){
+                current.applyState("sync");
+                collection.getChild(current.getId()).set(current.getItems(), function(err){
+                    current.applyState(err ? "error" : "ready");
+                });
+                PubSub.publish( 'ComponentChanged', {
+                    prev: prev,
+                    current: current
+                } );
+            }
         }
     }
     return onUserReady;

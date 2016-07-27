@@ -27,6 +27,7 @@ module.exports = (function(){
 
         this.params = params || {};
 
+        this.fields = fields;
     }
 
     TemplateProduct.prototype.linkToDOM = function(d) {
@@ -34,17 +35,19 @@ module.exports = (function(){
         this.applyState("ready");
 
         this.itemsNames.forEach(function(name){
-            this.el[name] = d.find("." + name);
-            this.el[name].val(this.items[name]);
-            this.el[name].on("change",this.onChange.bind(this, name));
+            var el = d.find("." + name);
+            el.val(this.items[name]);
+            el.on("change",this.onChange.bind(this, name));
+            this.el[name] = el;
         }.bind(this));
 
         return this;
     };
 
     TemplateProduct.prototype.onChange = function(name) {
+        var previosState = new  TemplateProduct(this.fields, {items: this.getItems()});
         this.items[name] = this.el[name].val();
-        this.params.onChange && this.params.onChange(this);
+        this.params.onChange && this.params.onChange(previosState, this);
     };
 
     TemplateProduct.prototype.getItems = function() {
@@ -81,6 +84,21 @@ module.exports = (function(){
 
     TemplateProduct.prototype.getEl = function() {
         return this.root;
+    };
+
+    TemplateProduct.prototype.setItems = function(items) {
+        var newNames = Object.keys(items);
+        this.itemsNames.forEach(function(name){
+            if(newNames.indexOf(name) < 0) return;
+
+            this.items[name] = items[name];
+        }.bind(this));
+    };
+
+    TemplateProduct.prototype.updateEl = function() {
+        this.itemsNames.forEach(function(name){
+            this.el[name].val(this.items[name]);
+        }.bind(this));
     };
 
     return TemplateProduct;

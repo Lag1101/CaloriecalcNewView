@@ -16,7 +16,7 @@ module.exports = (function(){
             {name: "calories", default: 0}
     ]);
     const PubSub = require("pubsub-js");
-    const rawProductTemplate = new Template("#raw-product-template");
+    const template = new Template("#raw-product-template");
 
     const rawProductList = $("#raw-product-list");
     const newRawProductEl = $("#new-raw-product");
@@ -24,7 +24,7 @@ module.exports = (function(){
 
 
 
-    newRawProductEl.append(rawProductTemplate.clone());
+    newRawProductEl.append(template.clone());
     const newRawProduct = new RawProduct({id: "new-raw-product"}).linkToDOM(newRawProductEl);
 
 
@@ -36,11 +36,14 @@ module.exports = (function(){
             rawProductsCollection.getChild(p.getId()).remove(function(err){
                 if(err){
                     ErrorWrapper(err);
+                    var el = template.clone();
+                    rawProductList.append(el);
+                    p.linkToDOM(el);
                     p.applyState("error");
                 } else {
-                    p.getEl().remove();
                 }
             });
+            p.getEl().remove();
         }
 
         function addToComponents(p) {
@@ -48,7 +51,7 @@ module.exports = (function(){
         }
 
         function addRawProductToProductList(id, items) {
-            var el = rawProductTemplate.clone();
+            var el = template.clone();
             rawProductList.append(el);
 
             var p = new RawProduct({id: id, items: items}, {onChange: onChange}).linkToDOM(el);
@@ -64,7 +67,7 @@ module.exports = (function(){
                 ErrorWrapper(err);
             } else {
                 Object.keys(rawProductsRes).map(function(id){
-                    addRawProductToProductList(id, rawProductsRes[id]);
+                    return addRawProductToProductList(id, rawProductsRes[id]);
                 });
             }
         });
@@ -84,10 +87,10 @@ module.exports = (function(){
         });
 
 
-        function onChange(p){
-            p.applyState("sync");
-            rawProductsCollection.getChild(p.id).set(p.getItems(), function(err){
-                p.applyState(err ? "error" : "ready");
+        function onChange(prev, current){
+            current.applyState("sync");
+            rawProductsCollection.getChild(current.getId()).set(current.getItems(), function(err){
+                current.applyState(err ? "error" : "ready");
             });
         }
     }

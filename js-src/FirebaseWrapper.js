@@ -11,7 +11,7 @@ module.exports = (function(){
         storageBucket: "caloriecalc-a8a40.appspot.com",
     };
 
-    const firebase = require("firebase")
+    const firebase = require("firebase");
 
     firebase.initializeApp(config);
 
