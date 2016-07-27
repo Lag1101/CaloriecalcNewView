@@ -1,4 +1,3 @@
-
 {
   "name": "CalorieCalcNew",
   "version": "0.0.0",
@@ -7,6 +6,7 @@
     "start": "firebase serve",
     "deploy": "firebase deploy",
     "build": "webpack",
+    "build-production": "webpack --optimize-minimize",
     "watch": "webpack --progress --colors --watch"
   },
   "dependencies": {

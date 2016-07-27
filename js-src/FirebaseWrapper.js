@@ -34,6 +34,7 @@ module.exports = (function(){
 
     FirebaseWrapper.DB = function(uid) {
         this.db = db.ref(uid);
+        this.db.child("LastOnline").onDisconnect().set(firebase.database.ServerValue.TIMESTAMP);
     };
 
     var DB = FirebaseWrapper.DB;

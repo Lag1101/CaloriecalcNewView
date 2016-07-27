@@ -3,11 +3,11 @@
  */
 
 module.exports = (function(){
-
-
     const $ = require("jquery");
     const Template = require("./Template");
     const ErrorWrapper = require("./ErrorWrapper");
+    const TemplateList = require("./TemplateList");
+    
     const Dish = require("./TemplateProduct").bind(null , [
         {name: "description", default: ""},
         {name: "full-proteins", default: 0},
@@ -25,7 +25,6 @@ module.exports = (function(){
 
     const template = new Template("#dish-template");
     const newDishEl = $("#new-dish");
-    const list = $("#dish-list");
     const addNewDishEl = $("#add-new-dish");
 
     newDishEl.append(template.clone());
@@ -54,85 +53,43 @@ module.exports = (function(){
         dish.updateEl();
     }
 
-    function onUserReady(DB) {
+    function onDBReady(DB){
         const collection = DB.getChild('dishes');
 
-        collection.getValue(function(err, res) {
-            if(err) {
-                ErrorWrapper(err);
-            } else {
-                onGetDishes(res);
-            }
-        });
-
-        PubSub.subscribe( 'ComponentsListReady', function(msg, components){
-            console.log(components);
-
-            var newDishItems = newDish.getItems();
-            itemNames.forEach(function(name){
-                newDishItems["full-" + name] = 0;
-            });
-
-            components.forEach(function(component){
-                var items = component.getItems();
-                var mass = parseFloat(items["mass"] || 0);
-                itemNames.forEach(function(name){
-                    newDishItems["full-" + name] += parseFloat(items[name] || 0) * mass / 100;
+        const dishList = new TemplateList({
+            collection:  collection,
+            changed: function(prev, current) {
+                updatePortion(current);
+                current.applyState("sync");
+                collection.getChild(current.getId()).set(current.getItems(), function(err){
+                    current.applyState(err ? "error" : "ready");
                 });
-            });
+                updatePortion(current)
+            },
+            removed: function (p) {
 
+            },
+            added: function (p) {
+                PubSub.publish( 'ComponentChanged', {
+                    prev: new Dish(),
+                    current: new Dish({items: p.getItems()})
+                } );
+            },
+            got: function (products) {
+                PubSub.publish( 'ComponentsListReady', products );
+            },
 
-            newDish.setItems(newDishItems);
-            updatePortion(newDish);
+            TemplateProduct: Dish,
+            listEl: $("#dish-list"),
+            template: template
         });
-
-
-        function addToList(id, items) {
-            var el = template.clone();
-            list.append(el);
-
-            var p = new Dish({id: id, items: items}, {onChange:dishChanged}).linkToDOM(el);
-
-            el.find(".remove").click(remove.bind(null, p));
-
-            return p;
-        }
-
-        function dishChanged(prev, current) {
-            updatePortion(current);
-            current.applyState("sync");
-            collection.getChild(current.getId()).set(current.getItems(), function(err){
-                current.applyState(err ? "error" : "ready");
-            });
-            updatePortion(current);
-        }
-
-        function remove(p) {
-            p.applyState("sync");
-            collection.getChild(p.getId()).remove(function(err){
-                if(err){
-                    ErrorWrapper(err);
-                    p.applyState("error");
-                } else {
-                }
-            });
-            p.getEl().remove();
-        }
+        PubSub.subscribe( 'AddRawProductToComponents', function(msg, items){
+            dishList.addProduct(items);
+        });
 
         addNewDishEl.click(function(){
-            var p = addToList("", newDish.getItems());
-            p.applyState("sync");
-            collection.push(p.getItems(), function(err, id){
-                if(err) {
-                    ErrorWrapper(err);
-                    p.applyState("error");
-                } else {
-                    p.setId(id);
-                    p.applyState("ready");
-                }
-            });
+            dishList.addProduct(newDish.getItems());
         });
-
 
         PubSub.subscribe( 'ComponentChanged', function(msg, h){
             var prev = h.prev;
@@ -155,12 +112,7 @@ module.exports = (function(){
             newDish.setItems(dishItems);
             updatePortion(newDish);
         });
-
-        function onGetDishes(dishesRes){
-            var dishes = dishesRes ? Object.keys(dishesRes).map(function(id){
-                return addToList(id, dishesRes[id]);
-            }) : [];
-        }
     }
-    return onUserReady;
+
+    return onDBReady;
 })();

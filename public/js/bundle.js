@@ -61,7 +61,6 @@
 	(function(){
 	    const FirebaseWrapper = __webpack_require__(2);
 	    const ErrorWrapper = __webpack_require__(5);
-	    const TemplateList = __webpack_require__(13);
 
 
 	    FirebaseWrapper.signIn('lomanovvasiliy@gmail.com','235901', function(err, uid){
@@ -70,12 +69,10 @@
 	        } else {
 	            const DB = new FirebaseWrapper.DB(uid);
 
-	            __webpack_require__(11)(DB);
-	            __webpack_require__(12)(DB);
 	            __webpack_require__(6)(DB);
-
-
-
+	            __webpack_require__(12)(DB);
+	            __webpack_require__(13)(DB);
+	            __webpack_require__(14)(DB);
 	        }
 	    });
 	})();
@@ -123,6 +120,7 @@
 
 	    FirebaseWrapper.DB = function(uid) {
 	        this.db = db.ref(uid);
+	        this.db.child("LastOnline").onDisconnect().set(firebase.database.ServerValue.TIMESTAMP);
 	    };
 
 	    var DB = FirebaseWrapper.DB;
@@ -793,50 +791,53 @@
 
 	    const $ = __webpack_require__(7);
 	    const ErrorWrapper = __webpack_require__(5);
-	    const TemplateList = __webpack_require__(13);
-	    const Template = __webpack_require__(8);
+	    const TemplateList = __webpack_require__(8);
+	    const Template = __webpack_require__(9);
 	    const PubSub = __webpack_require__(10);
 
-	    const Component = __webpack_require__(9).bind(null , [
+	    const Component = __webpack_require__(11).bind(null , [
 	        {name: "description", default: ""},
 	        {name: "proteins", default: 0},
 	        {name: "triglyceride", default: 0},
 	        {name: "carbohydrate", default: 0},
-	        {name: "calories", default: 0},
-	        {name: "mass", default: 100}
+	        {name: "calories", default: 0}
 	    ]);
+
+	    const template = new Template("#raw-product-template");
+
 
 	    function onDBReady(DB) {
 	        const componentsList = new TemplateList({
-	            collection:  DB.getChild('components'),
+	            collection:  DB.getChild('raw-products'),
 	            changed: function(prev, current) {
-	                PubSub.publish( 'ComponentChanged', {
-	                    prev: prev,
-	                    current: current
-	                } );
+
 	            },
 	            removed: function (p) {
-	                PubSub.publish( 'ComponentChanged', {
-	                    prev: new Component({items: p.getItems()}),
-	                    current: new Component()
-	                } );
+
 	            },
 	            added: function (p) {
-	                PubSub.publish( 'ComponentChanged', {
-	                    prev: new Component(),
-	                    current: new Component({items: p.getItems()})
-	                } );
+	                p.getEl().find(".add-to-components").click(function(){
+	                    PubSub.publish( 'AddRawProductToComponents', p.getItems() );
+	                });
 	            },
 	            got: function (products) {
-	                PubSub.publish( 'ComponentsListReady', products );
+
 	            },
 
 	            TemplateProduct: Component,
-	            listEl: $("#components-list"),
-	            template: new Template("#component-template")
+	            listEl: $("#raw-product-list"),
+	            template: template
 	        });
-	        PubSub.subscribe( 'AddRawProductToComponents', function(msg, items){
-	            componentsList.addProduct(items);
+
+	        const newRawProductEl = $("#new-raw-product");
+	        newRawProductEl.append(template.clone());
+
+	        const addRawProductEl = $("#add-raw-product");
+
+	        const newRawProduct = new Component({id: "new-raw-product"}).linkToDOM(newRawProductEl);
+
+	        addRawProductEl.click(function(){
+	            componentsList.addProduct(newRawProduct.getItems());
 	        });
 	    }
 
@@ -10928,6 +10929,103 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
+	 * Created by luckybug on 27.07.16.
+	 */
+
+	module.exports = (function(){
+
+	    const ErrorWrapper = __webpack_require__(5);
+
+	    function ListTemplate(params) {
+
+	        this.params = params || {};
+	        this.collection = this.params.collection;
+	        this.template = this.params.template;
+	        this.listEl = this.params.listEl;
+	        this.TemplateProduct = this.params.TemplateProduct;
+
+
+	        this.collection.getValue(function(err, res) {
+	            if(err) {
+	                ErrorWrapper(err);
+	            } else {
+	                this.onGet(res);
+	            }
+	        }.bind(this));
+
+	    }
+
+	    ListTemplate.prototype.onGet = function(componentsRes){
+	        var components = componentsRes ? Object.keys(componentsRes).map(function(id){
+	            return this.addToList(id, componentsRes[id]);
+	        }.bind(this)) : [];
+
+	        this.params.got && this.params.got(components);
+	    };
+
+	    ListTemplate.prototype.onChange = function(prev, current){
+	        current.applyState("sync");
+	        this.collection.getChild(current.getId()).set(current.getItems(), function(err){
+	            current.applyState(err ? "error" : "ready");
+	        });
+
+	        this.params.changed && this.params.changed(prev, current);
+	    };
+
+	    ListTemplate.prototype.addToList = function(id, items) {
+	        var el = this.template.clone();
+	        this.listEl.append(el);
+
+	        var p = new this.TemplateProduct({id: id, items: items}, {onChange: this.onChange.bind(this)}).linkToDOM(el);
+
+	        el.find(".remove").click(this.remove.bind(this, p));
+
+	        this.params.added && this.params.added(p);
+
+	        return p;
+	    };
+
+	    ListTemplate.prototype.addProduct = function(items) {
+	        var p = this.addToList("", items);
+	        p.applyState("sync");
+	        this.collection.push(p.getItems(), function(err, id){
+	            if(err) {
+	                ErrorWrapper(err);
+	                p.applyState("error");
+	            } else {
+	                p.setId(id);
+	                p.applyState("ready");
+	            }
+	        });
+	        this.params.added && this.params.added(p);
+	    };
+
+	    ListTemplate.prototype.remove = function(p) {
+	        p.applyState("sync");
+	        this.collection.getChild(p.getId()).remove(function(err){
+	            if(err){
+	                ErrorWrapper(err);
+	                var el = this.template.clone();
+	                this.listEl.append(el);
+	                p.linkToDOM(el);
+	                p.applyState("error");
+	            } else {
+
+	            }
+	        }.bind(this));
+	        p.getEl().remove();
+
+	        this.params.removed && this.params.removed(p);
+	    };
+
+	    return ListTemplate;
+	})();
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
 	 * Created by LuckyBug on 23.07.2016.
 	 */
 
@@ -10944,119 +11042,6 @@
 	        return this.el.children().clone();
 	    };
 	    return Template;
-	})();
-
-
-/***/ },
-/* 9 */
-/***/ function(module, exports) {
-
-	
-	//{
-	//    name: "description",
-	//    default: ""
-	//}
-	module.exports = (function(){
-	    function TemplateProduct(fields, p, params){
-
-	        p = p || {};
-	        p.items = p.items || {};
-
-	        if (!p.id)
-	            this.state = "sync";
-	        else
-	            this.state = "ready";
-
-	        this.id = p.id;
-
-	        this.el = {};
-
-	        this.items = {};
-	        fields.forEach(function(f){
-	            this.items[f.name] = p.items[f.name] || f.default;
-	        }.bind(this));
-
-	        this.itemsNames = Object.keys(this.items);
-
-	        this.params = params || {};
-
-	        this.fields = fields;
-	    }
-
-	    TemplateProduct.prototype.linkToDOM = function(d) {
-	        this.root =    d;
-	        this.applyState("ready");
-
-	        this.itemsNames.forEach(function(name){
-	            var el = d.find("." + name);
-	            el.val(this.items[name]);
-	            el.on("change",this.onChange.bind(this, name));
-	            if(this.el[name])
-	                this.el[name].off("change");
-	            this.el[name] = el;
-	        }.bind(this));
-
-	        return this;
-	    };
-
-	    TemplateProduct.prototype.onChange = function(name) {
-	        var previosState = new  TemplateProduct(this.fields, {items: this.getItems()});
-	        this.items[name] = this.el[name].val();
-	        this.params.onChange && this.params.onChange(previosState, this);
-	    };
-
-	    TemplateProduct.prototype.getItems = function() {
-	        return this.items;
-	    };
-
-	    TemplateProduct.StateClass = {
-	        sync: "sync-state",
-	        ready: "ready-state",
-	        error: "error-state"
-	    };
-
-	    TemplateProduct.prototype.applyState = function(state) {
-	        if(!state || state === this.state || Object.keys(TemplateProduct.StateClass).indexOf(state) < 0 )
-	            return;
-
-	        this.root && this.root.removeClass(TemplateProduct.StateClass[this.state]);
-	        this.root && this.root.addClass(TemplateProduct.StateClass[state]);
-
-	        this.setState(state);
-	    };
-
-	    TemplateProduct.prototype.setState = function(state) {
-	        this.state = state;
-	    };
-
-	    TemplateProduct.prototype.setId = function(id) {
-	        this.id = id;
-	    };
-
-	    TemplateProduct.prototype.getId = function() {
-	        return this.id;
-	    };
-
-	    TemplateProduct.prototype.getEl = function() {
-	        return this.root;
-	    };
-
-	    TemplateProduct.prototype.setItems = function(items) {
-	        var newNames = Object.keys(items);
-	        this.itemsNames.forEach(function(name){
-	            if(newNames.indexOf(name) < 0) return;
-
-	            this.items[name] = items[name];
-	        }.bind(this));
-	    };
-
-	    TemplateProduct.prototype.updateEl = function() {
-	        this.itemsNames.forEach(function(name){
-	            this.el[name].val(this.items[name]);
-	        }.bind(this));
-	    };
-
-	    return TemplateProduct;
 	})();
 
 
@@ -11313,68 +11298,116 @@
 
 /***/ },
 /* 11 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	/**
-	 * Created by LuckyBug on 26.07.2016.
-	 */
-
+	
+	//{
+	//    name: "description",
+	//    default: ""
+	//}
 	module.exports = (function(){
+	    function TemplateProduct(fields, p, params){
 
-	    const $ = __webpack_require__(7);
-	    const ErrorWrapper = __webpack_require__(5);
-	    const TemplateList = __webpack_require__(13);
-	    const Template = __webpack_require__(8);
-	    const PubSub = __webpack_require__(10);
+	        p = p || {};
+	        p.items = p.items || {};
 
-	    const Component = __webpack_require__(9).bind(null , [
-	        {name: "description", default: ""},
-	        {name: "proteins", default: 0},
-	        {name: "triglyceride", default: 0},
-	        {name: "carbohydrate", default: 0},
-	        {name: "calories", default: 0}
-	    ]);
+	        if (!p.id)
+	            this.state = "sync";
+	        else
+	            this.state = "ready";
 
-	    const template = new Template("#raw-product-template");
+	        this.id = p.id;
 
+	        this.el = {};
 
-	    function onDBReady(DB) {
-	        const componentsList = new TemplateList({
-	            collection:  DB.getChild('raw-products'),
-	            changed: function(prev, current) {
+	        this.items = {};
+	        fields.forEach(function(f){
+	            this.items[f.name] = p.items[f.name] || f.default;
+	        }.bind(this));
 
-	            },
-	            removed: function (p) {
+	        this.itemsNames = Object.keys(this.items);
 
-	            },
-	            added: function (p) {
-	                p.getEl().find(".add-to-components").click(function(){
-	                    PubSub.publish( 'AddRawProductToComponents', p.getItems() );
-	                });
-	            },
-	            got: function (products) {
+	        this.params = params || {};
 
-	            },
-
-	            TemplateProduct: Component,
-	            listEl: $("#raw-product-list"),
-	            template: template
-	        });
-
-	        const newRawProductEl = $("#new-raw-product");
-	        newRawProductEl.append(template.clone());
-
-	        const addRawProductEl = $("#add-raw-product");
-
-	        const newRawProduct = new Component({id: "new-raw-product"}).linkToDOM(newRawProductEl);
-
-	        addRawProductEl.click(function(){
-	            componentsList.addProduct(newRawProduct.getItems());
-	        });
+	        this.fields = fields;
 	    }
 
-	    return onDBReady;
+	    TemplateProduct.prototype.linkToDOM = function(d) {
+	        this.root =    d;
+	        this.applyState("ready");
+
+	        this.itemsNames.forEach(function(name){
+	            var el = d.find("." + name);
+	            el.val(this.items[name]);
+	            el.on("change",this.onChange.bind(this, name));
+	            if(this.el[name])
+	                this.el[name].off("change");
+	            this.el[name] = el;
+	        }.bind(this));
+
+	        return this;
+	    };
+
+	    TemplateProduct.prototype.onChange = function(name) {
+	        var previosState = new  TemplateProduct(this.fields, {items: this.getItems()});
+	        this.items[name] = this.el[name].val();
+	        this.params.onChange && this.params.onChange(previosState, this);
+	    };
+
+	    TemplateProduct.prototype.getItems = function() {
+	        return this.items;
+	    };
+
+	    TemplateProduct.StateClass = {
+	        sync: "sync-state",
+	        ready: "ready-state",
+	        error: "error-state"
+	    };
+
+	    TemplateProduct.prototype.applyState = function(state) {
+	        if(!state || state === this.state || Object.keys(TemplateProduct.StateClass).indexOf(state) < 0 )
+	            return;
+
+	        this.root && this.root.removeClass(TemplateProduct.StateClass[this.state]);
+	        this.root && this.root.addClass(TemplateProduct.StateClass[state]);
+
+	        this.setState(state);
+	    };
+
+	    TemplateProduct.prototype.setState = function(state) {
+	        this.state = state;
+	    };
+
+	    TemplateProduct.prototype.setId = function(id) {
+	        this.id = id;
+	    };
+
+	    TemplateProduct.prototype.getId = function() {
+	        return this.id;
+	    };
+
+	    TemplateProduct.prototype.getEl = function() {
+	        return this.root;
+	    };
+
+	    TemplateProduct.prototype.setItems = function(items) {
+	        var newNames = Object.keys(items);
+	        this.itemsNames.forEach(function(name){
+	            if(newNames.indexOf(name) < 0) return;
+
+	            this.items[name] = items[name];
+	        }.bind(this));
+	    };
+
+	    TemplateProduct.prototype.updateEl = function() {
+	        this.itemsNames.forEach(function(name){
+	            this.el[name].val(this.items[name]);
+	        }.bind(this));
+	    };
+
+	    return TemplateProduct;
 	})();
+
 
 /***/ },
 /* 12 */
@@ -11385,12 +11418,12 @@
 	 */
 
 	module.exports = (function(){
-
-
 	    const $ = __webpack_require__(7);
-	    const Template = __webpack_require__(8);
+	    const Template = __webpack_require__(9);
 	    const ErrorWrapper = __webpack_require__(5);
-	    const Dish = __webpack_require__(9).bind(null , [
+	    const TemplateList = __webpack_require__(8);
+	    
+	    const Dish = __webpack_require__(11).bind(null , [
 	        {name: "description", default: ""},
 	        {name: "full-proteins", default: 0},
 	        {name: "full-triglyceride", default: 0},
@@ -11407,7 +11440,6 @@
 
 	    const template = new Template("#dish-template");
 	    const newDishEl = $("#new-dish");
-	    const list = $("#dish-list");
 	    const addNewDishEl = $("#add-new-dish");
 
 	    newDishEl.append(template.clone());
@@ -11436,85 +11468,43 @@
 	        dish.updateEl();
 	    }
 
-	    function onUserReady(DB) {
+	    function onDBReady(DB){
 	        const collection = DB.getChild('dishes');
 
-	        collection.getValue(function(err, res) {
-	            if(err) {
-	                ErrorWrapper(err);
-	            } else {
-	                onGetDishes(res);
-	            }
-	        });
-
-	        PubSub.subscribe( 'ComponentsListReady', function(msg, components){
-	            console.log(components);
-
-	            var newDishItems = newDish.getItems();
-	            itemNames.forEach(function(name){
-	                newDishItems["full-" + name] = 0;
-	            });
-
-	            components.forEach(function(component){
-	                var items = component.getItems();
-	                var mass = parseFloat(items["mass"] || 0);
-	                itemNames.forEach(function(name){
-	                    newDishItems["full-" + name] += parseFloat(items[name] || 0) * mass / 100;
+	        const dishList = new TemplateList({
+	            collection:  collection,
+	            changed: function(prev, current) {
+	                updatePortion(current);
+	                current.applyState("sync");
+	                collection.getChild(current.getId()).set(current.getItems(), function(err){
+	                    current.applyState(err ? "error" : "ready");
 	                });
-	            });
+	                updatePortion(current)
+	            },
+	            removed: function (p) {
 
+	            },
+	            added: function (p) {
+	                PubSub.publish( 'ComponentChanged', {
+	                    prev: new Dish(),
+	                    current: new Dish({items: p.getItems()})
+	                } );
+	            },
+	            got: function (products) {
+	                PubSub.publish( 'ComponentsListReady', products );
+	            },
 
-	            newDish.setItems(newDishItems);
-	            updatePortion(newDish);
+	            TemplateProduct: Dish,
+	            listEl: $("#dish-list"),
+	            template: template
 	        });
-
-
-	        function addToList(id, items) {
-	            var el = template.clone();
-	            list.append(el);
-
-	            var p = new Dish({id: id, items: items}, {onChange:dishChanged}).linkToDOM(el);
-
-	            el.find(".remove").click(remove.bind(null, p));
-
-	            return p;
-	        }
-
-	        function dishChanged(prev, current) {
-	            updatePortion(current);
-	            current.applyState("sync");
-	            collection.getChild(current.getId()).set(current.getItems(), function(err){
-	                current.applyState(err ? "error" : "ready");
-	            });
-	            updatePortion(current);
-	        }
-
-	        function remove(p) {
-	            p.applyState("sync");
-	            collection.getChild(p.getId()).remove(function(err){
-	                if(err){
-	                    ErrorWrapper(err);
-	                    p.applyState("error");
-	                } else {
-	                }
-	            });
-	            p.getEl().remove();
-	        }
+	        PubSub.subscribe( 'AddRawProductToComponents', function(msg, items){
+	            dishList.addProduct(items);
+	        });
 
 	        addNewDishEl.click(function(){
-	            var p = addToList("", newDish.getItems());
-	            p.applyState("sync");
-	            collection.push(p.getItems(), function(err, id){
-	                if(err) {
-	                    ErrorWrapper(err);
-	                    p.applyState("error");
-	                } else {
-	                    p.setId(id);
-	                    p.applyState("ready");
-	                }
-	            });
+	            dishList.addProduct(newDish.getItems());
 	        });
-
 
 	        PubSub.subscribe( 'ComponentChanged', function(msg, h){
 	            var prev = h.prev;
@@ -11537,14 +11527,9 @@
 	            newDish.setItems(dishItems);
 	            updatePortion(newDish);
 	        });
-
-	        function onGetDishes(dishesRes){
-	            var dishes = dishesRes ? Object.keys(dishesRes).map(function(id){
-	                return addToList(id, dishesRes[id]);
-	            }) : [];
-	        }
 	    }
-	    return onUserReady;
+
+	    return onDBReady;
 	})();
 
 /***/ },
@@ -11552,96 +11537,134 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
-	 * Created by luckybug on 27.07.16.
+	 * Created by LuckyBug on 26.07.2016.
 	 */
 
 	module.exports = (function(){
 
+	    const $ = __webpack_require__(7);
 	    const ErrorWrapper = __webpack_require__(5);
+	    const TemplateList = __webpack_require__(8);
+	    const Template = __webpack_require__(9);
+	    const PubSub = __webpack_require__(10);
 
-	    function ListTemplate(params) {
+	    const Component = __webpack_require__(11).bind(null , [
+	        {name: "description", default: ""},
+	        {name: "proteins", default: 0},
+	        {name: "triglyceride", default: 0},
+	        {name: "carbohydrate", default: 0},
+	        {name: "calories", default: 0},
+	        {name: "mass", default: 100}
+	    ]);
 
-	        this.params = params || {};
-	        this.collection = this.params.collection;
-	        this.template = this.params.template;
-	        this.listEl = this.params.listEl;
-	        this.TemplateProduct = this.params.TemplateProduct;
+	    function onDBReady(DB) {
+	        const componentsList = new TemplateList({
+	            collection:  DB.getChild('components'),
+	            changed: function(prev, current) {
+	                PubSub.publish( 'ComponentChanged', {
+	                    prev: prev,
+	                    current: current
+	                } );
+	            },
+	            removed: function (p) {
+	                PubSub.publish( 'ComponentChanged', {
+	                    prev: new Component({items: p.getItems()}),
+	                    current: new Component()
+	                } );
+	            },
+	            added: function (p) {
+	                PubSub.publish( 'ComponentChanged', {
+	                    prev: new Component(),
+	                    current: new Component({items: p.getItems()})
+	                } );
+	            },
+	            got: function (products) {
+	                PubSub.publish( 'ComponentsListReady', products );
+	            },
+
+	            TemplateProduct: Component,
+	            listEl: $("#components-list"),
+	            template: new Template("#component-template")
+	        });
+	        PubSub.subscribe( 'AddRawProductToComponents', function(msg, items){
+	            componentsList.addProduct(items);
+	        });
+	    }
+
+	    return onDBReady;
+	})();
+
+/***/ },
+/* 14 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Created by LuckyBug on 28.07.2016.
+	 */
 
 
-	        this.collection.getValue(function(err, res) {
-	            if(err) {
-	                ErrorWrapper(err);
-	            } else {
-	                this.onGet(res);
-	            }
-	        }.bind(this));
+
+	module.exports = (function(){
+	    const $ = __webpack_require__(7);
+	    const ErrorWrapper = __webpack_require__(5);
+	    const TemplateList = __webpack_require__(8);
+	    const Template = __webpack_require__(9);
+	    const PubSub = __webpack_require__(10);
+	    const list = $("#daily-list");
+
+	    const ProductTemplate = __webpack_require__(11).bind(null , [
+	        {name: "description", default: ""},
+	        {name: "proteins", default: 0},
+	        {name: "triglyceride", default: 0},
+	        {name: "carbohydrate", default: 0},
+	        {name: "calories", default: 0},
+	        {name: "details", default: ""}
+	    ]);
+
+	    const template = new Template("#daily-product-template");
+
+	    const dailyPartsNames = [
+	        "breakfast",
+	        "lunch",
+	        "dinner",
+	        "snack",
+	        "second-dinner",
+	        "bedtime"
+	    ];
+
+	    const dailyParts = dailyPartsNames.map(function(name){
+	        var el = list.find("." + name);
+	        return new ProductTemplate({id: name}).linkToDOM(el);
+	    });
+
+	    function onDBReady(DB) {
+	        const componentsList = new TemplateList({
+	            collection:  DB.getChild('daily').getChild(new Date().getDate()),
+	            changed: function(prev, current) {
+
+	            },
+	            removed: function (p) {
+
+	            },
+	            added: function (p) {
+
+	            },
+	            got: function (products) {
+	                if(products.length === 0) {
+	                    dailyParts.forEach(function(part){
+	                        componentsList.addProduct()
+	                    });
+	                }
+	            },
+
+	            TemplateProduct: ProductTemplate,
+	            listEl: list,
+	            template: template
+	        });
 
 	    }
 
-	    ListTemplate.prototype.onGet = function(componentsRes){
-	        var components = componentsRes ? Object.keys(componentsRes).map(function(id){
-	            return this.addToList(id, componentsRes[id]);
-	        }.bind(this)) : [];
-
-	        this.params.got && this.params.got(components);
-	    };
-
-	    ListTemplate.prototype.onChange = function(prev, current){
-	        current.applyState("sync");
-	        this.collection.getChild(current.getId()).set(current.getItems(), function(err){
-	            current.applyState(err ? "error" : "ready");
-	        });
-
-	        this.params.changed && this.params.changed(prev, current);
-	    };
-
-	    ListTemplate.prototype.addToList = function(id, items) {
-	        var el = this.template.clone();
-	        this.listEl.append(el);
-
-	        var p = new this.TemplateProduct({id: id, items: items}, {onChange: this.onChange.bind(this)}).linkToDOM(el);
-
-	        el.find(".remove").click(this.remove.bind(this, p));
-
-	        this.params.added && this.params.added(p);
-
-	        return p;
-	    };
-
-	    ListTemplate.prototype.addProduct = function(items) {
-	        var p = this.addToList("", items);
-	        p.applyState("sync");
-	        this.collection.push(p.getItems(), function(err, id){
-	            if(err) {
-	                ErrorWrapper(err);
-	                p.applyState("error");
-	            } else {
-	                p.setId(id);
-	                p.applyState("ready");
-	            }
-	        });
-	        this.params.added && this.params.added(p);
-	    };
-
-	    ListTemplate.prototype.remove = function(p) {
-	        p.applyState("sync");
-	        this.collection.getChild(p.getId()).remove(function(err){
-	            if(err){
-	                ErrorWrapper(err);
-	                var el = this.template.clone();
-	                this.listEl.append(el);
-	                p.linkToDOM(el);
-	                p.applyState("error");
-	            } else {
-
-	            }
-	        }.bind(this));
-	        p.getEl().remove();
-
-	        this.params.removed && this.params.removed(p);
-	    };
-
-	    return ListTemplate;
+	    return onDBReady;
 	})();
 
 /***/ }

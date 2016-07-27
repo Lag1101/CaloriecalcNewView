@@ -27,6 +27,16 @@
         <h2>Список блюд</h2>
     </div>
 
+    <div id="daily-list">
+        <h2>Дневное расписание</h2>
+        <div class="daily-product breakfast"></div>
+        <div class="daily-product lunch"></div>
+        <div class="daily-product dinner"></div>
+        <div class="daily-product snack"></div>
+        <div class="daily-product second-dinner"></div>
+        <div class="daily-product bedtime"></div>
+    </div>
+
     <div id="component-template" class="hidden">
         <div>
             <button class="remove">-</button>
@@ -70,6 +80,18 @@
                 <input type="number" name="carbohydrate " min="0" placeholder="углеводы" class="dish-item portion-carbohydrate">
                 <input type="number" name="calories" min="0" placeholder="углеводы" class="dish-item portion-calories">
                 <input type="number" name="mass" min="0" placeholder="масса, гр" class="dish-item portion-mass">
+            </div>
+        </div>
+    </div>
+    <div id="daily-product-template" class="hidden">
+        <div>
+            <div class="daily-product">
+                <input type="text" name="description" placeholder="описание" class="product-item description">
+                <input type="number" name="proteins" min="0" placeholder="белки" class="product-item proteins">
+                <input type="number" name="triglyceride" min="0" placeholder="жиры" class="product-item triglyceride">
+                <input type="number" name="carbohydrate " min="0" placeholder="углеводы" class="product-item carbohydrate">
+                <input type="number" name="calories" min="0" placeholder="углеводы" class="product-item calories">
+                <input type="text" name="description" placeholder="описание" class="product-item description">
             </div>
         </div>
     </div>
