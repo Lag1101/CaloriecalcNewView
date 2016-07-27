@@ -9,7 +9,7 @@
 <body>
     <div id="raw-product-list">
         <div>
-            <button id="add-raw-product">add</button>
+            <button id="add-raw-product">add to raw-product-list</button>
             <div id="new-raw-product"></div>
         </div>
         <h2>Продукты</h2>
@@ -21,7 +21,7 @@
 
     <div id="dish-list">
         <div>
-            <button id="add-new-dish">add</button>
+            <button id="add-new-dish">add to dish-list</button>
             <div id="new-dish"></div>
         </div>
         <h2>Список блюд</h2>
@@ -29,7 +29,7 @@
 
     <div id="component-template" class="hidden">
         <div>
-            <button class="remove-component">-</button>
+            <button class="remove">-</button>
             <div class="component">
                 <input type="text" name="description" placeholder="описание" class="component-item description">
                 <input type="number" name="proteins" min="0" placeholder="белки" class="component-item proteins">
@@ -42,8 +42,8 @@
     </div>
     <div id="raw-product-template" class="hidden">
         <div>
-            <button class="add-to-components">+</button>
-            <button class="remove-raw-product">-</button>
+            <button class="add-to-components">add-to-components</button>
+            <button class="remove">-</button>
             <div class="raw-product">
                 <input type="text" name="description" placeholder="описание" class="product-item description">
                 <input type="number" name="proteins" min="0" placeholder="белки" class="product-item proteins">
@@ -55,7 +55,7 @@
     </div>
     <div id="dish-template" class="hidden">
         <div>
-            <button class="remove-dish">-</button>
+            <button class="remove">-</button>
             <input type="text" name="description" placeholder="описание" class="product-item description">
             <div class="dish-full">
                 <input type="number" name="proteins" min="0" placeholder="белки" class="dish-item full-proteins">

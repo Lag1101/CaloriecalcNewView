@@ -73,6 +73,9 @@
 	            __webpack_require__(11)(DB);
 	            __webpack_require__(12)(DB);
 	            __webpack_require__(6)(DB);
+
+
+
 	        }
 	    });
 	})();
@@ -11318,97 +11321,59 @@
 
 	module.exports = (function(){
 
-
 	    const $ = __webpack_require__(7);
-	    const Template = __webpack_require__(8);
 	    const ErrorWrapper = __webpack_require__(5);
-	    const RawProduct = __webpack_require__(9).bind(null , [
-	            {name: "description", default: ""},
-	            {name: "proteins", default: 0},
-	            {name: "triglyceride", default: 0},
-	            {name: "carbohydrate", default: 0},
-	            {name: "calories", default: 0}
-	    ]);
+	    const TemplateList = __webpack_require__(13);
+	    const Template = __webpack_require__(8);
 	    const PubSub = __webpack_require__(10);
+
+	    const Component = __webpack_require__(9).bind(null , [
+	        {name: "description", default: ""},
+	        {name: "proteins", default: 0},
+	        {name: "triglyceride", default: 0},
+	        {name: "carbohydrate", default: 0},
+	        {name: "calories", default: 0}
+	    ]);
+
 	    const template = new Template("#raw-product-template");
 
-	    const rawProductList = $("#raw-product-list");
-	    const newRawProductEl = $("#new-raw-product");
-	    const addRawProductEl = $("#add-raw-product");
 
+	    function onDBReady(DB) {
+	        const componentsList = new TemplateList({
+	            collection:  DB.getChild('raw-products'),
+	            changed: function(prev, current) {
 
+	            },
+	            removed: function (p) {
 
-	    newRawProductEl.append(template.clone());
-	    const newRawProduct = new RawProduct({id: "new-raw-product"}).linkToDOM(newRawProductEl);
-
-
-	    function onUserReady(DB) {
-	        const rawProductsCollection = DB.getChild('raw-products');
-
-	        function removeByProduct(p) {
-	            p.applyState("sync");
-	            rawProductsCollection.getChild(p.getId()).remove(function(err){
-	                if(err){
-	                    ErrorWrapper(err);
-	                    var el = template.clone();
-	                    rawProductList.append(el);
-	                    p.linkToDOM(el);
-	                    p.applyState("error");
-	                } else {
-	                }
-	            });
-	            p.getEl().remove();
-	        }
-
-	        function addToComponents(p) {
-	            PubSub.publish( 'AddRawProductToComponents', p.getItems() );
-	        }
-
-	        function addRawProductToProductList(id, items) {
-	            var el = template.clone();
-	            rawProductList.append(el);
-
-	            var p = new RawProduct({id: id, items: items}, {onChange: onChange}).linkToDOM(el);
-
-	            el.find(".remove-raw-product").click(removeByProduct.bind(null, p));
-	            el.find(".add-to-components").click(addToComponents.bind(null, p));
-
-	            return p;
-	        }
-
-	        rawProductsCollection.getValue(function(err, rawProductsRes) {
-	            if(err) {
-	                ErrorWrapper(err);
-	            } else {
-	                Object.keys(rawProductsRes).map(function(id){
-	                    return addRawProductToProductList(id, rawProductsRes[id]);
+	            },
+	            added: function (p) {
+	                p.getEl().find(".add-to-components").click(function(){
+	                    PubSub.publish( 'AddRawProductToComponents', p.getItems() );
 	                });
-	            }
+	            },
+	            got: function (products) {
+
+	            },
+
+	            TemplateProduct: Component,
+	            listEl: $("#raw-product-list"),
+	            template: template
 	        });
+
+	        const newRawProductEl = $("#new-raw-product");
+	        newRawProductEl.append(template.clone());
+
+	        const addRawProductEl = $("#add-raw-product");
+
+	        const newRawProduct = new Component({id: "new-raw-product"}).linkToDOM(newRawProductEl);
 
 	        addRawProductEl.click(function(){
-	            var p = addRawProductToProductList("", newRawProduct.getItems());
-	            p.applyState("sync");
-	            rawProductsCollection.push(p.getItems(), function(err, id){
-	                if(err) {
-	                    ErrorWrapper(err);
-	                    p.applyState("error");
-	                } else {
-	                    p.setId(id);
-	                    p.applyState("ready");
-	                }
-	            });
+	            componentsList.addProduct(newRawProduct.getItems());
 	        });
-
-
-	        function onChange(prev, current){
-	            current.applyState("sync");
-	            rawProductsCollection.getChild(current.getId()).set(current.getItems(), function(err){
-	                current.applyState(err ? "error" : "ready");
-	            });
-	        }
 	    }
-	    return onUserReady;
+
+	    return onDBReady;
 	})();
 
 /***/ },
@@ -11510,7 +11475,7 @@
 
 	            var p = new Dish({id: id, items: items}, {onChange:dishChanged}).linkToDOM(el);
 
-	            el.find(".remove-dish").click(remove.bind(null, p));
+	            el.find(".remove").click(remove.bind(null, p));
 
 	            return p;
 	        }
@@ -11636,7 +11601,9 @@
 
 	        var p = new this.TemplateProduct({id: id, items: items}, {onChange: this.onChange.bind(this)}).linkToDOM(el);
 
-	        el.find(".remove-component").click(this.remove.bind(this, p));
+	        el.find(".remove").click(this.remove.bind(this, p));
+
+	        this.params.added && this.params.added(p);
 
 	        return p;
 	    };

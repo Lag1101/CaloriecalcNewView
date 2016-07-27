@@ -93,7 +93,7 @@ module.exports = (function(){
 
             var p = new Dish({id: id, items: items}, {onChange:dishChanged}).linkToDOM(el);
 
-            el.find(".remove-dish").click(remove.bind(null, p));
+            el.find(".remove").click(remove.bind(null, p));
 
             return p;
         }

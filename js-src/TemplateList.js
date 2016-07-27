@@ -48,7 +48,9 @@ module.exports = (function(){
 
         var p = new this.TemplateProduct({id: id, items: items}, {onChange: this.onChange.bind(this)}).linkToDOM(el);
 
-        el.find(".remove-component").click(this.remove.bind(this, p));
+        el.find(".remove").click(this.remove.bind(this, p));
+
+        this.params.added && this.params.added(p);
 
         return p;
     };

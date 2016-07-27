@@ -16,6 +16,9 @@
             require("./RawProductsControl")(DB);
             require("./DishesControl")(DB);
             require("./ComponentsControl")(DB);
+
+
+
         }
     });
 })();
