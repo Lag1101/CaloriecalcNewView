@@ -4,6 +4,7 @@
 //    default: ""
 //}
 module.exports = (function(){
+    const $ = require("jquery");
     function TemplateProduct(fields, p, params){
 
         p = p || {};
@@ -30,6 +31,11 @@ module.exports = (function(){
         this.fields = fields;
     }
 
+    function textareaResize(el) {
+        el.style.height = '0px';
+        el.style.height = el.scrollHeight + 'px';
+    }
+
     TemplateProduct.prototype.linkToDOM = function(d) {
         this.root =    d;
         this.applyState("ready");
@@ -42,6 +48,13 @@ module.exports = (function(){
                 this.el[name].off("change");
             this.el[name] = el;
         }.bind(this));
+
+        this.root.find("textarea").each(function(i, el) {
+            textareaResize(el);
+            $(el).on("input", function(){
+                textareaResize(el);
+            })
+        });
 
         return this;
     };

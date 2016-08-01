@@ -19,3 +19,49 @@
     overflow: hidden;
     overflow-y: scroll;
 }
+
+.product-item{
+    width: 15%;
+}
+.product-item.description{
+    width: 30%;
+}
+
+.component-item{
+    width: 15%;
+}
+.component-item.description{
+    width: 20%;
+}
+
+.dish-item{
+    width: 7.5%;
+}
+.dish-item.description{
+    width: 20%;
+}
+button{
+    width: 30px;
+}
+
+.daily-product > .daily-lable{
+    width: 60px;
+}
+
+.daily-product > button{
+    width: 60px;
+}
+
+.daily-product > textarea{
+    width: 60px;
+    min-height: 24px;
+    height: 24px;
+    overflow: hidden;
+    resize: none;
+    vertical-align: top;
+}
+
+.dish-item, .component-item, .product-item,.daily-item {
+    margin: 0;
+    padding: 0;
+}

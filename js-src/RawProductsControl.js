@@ -61,8 +61,6 @@ module.exports = (function(){
         }
 
         const newRawProductEl = $("#new-raw-product");
-        newRawProductEl.append(template.clone());
-
         const addRawProductEl = $("#add-raw-product");
 
         const newRawProduct = new Component({id: "new-raw-product"}).linkToDOM(newRawProductEl);

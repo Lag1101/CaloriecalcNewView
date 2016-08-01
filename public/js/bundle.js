@@ -846,8 +846,6 @@
 	        }
 
 	        const newRawProductEl = $("#new-raw-product");
-	        newRawProductEl.append(template.clone());
-
 	        const addRawProductEl = $("#add-raw-product");
 
 	        const newRawProduct = new Component({id: "new-raw-product"}).linkToDOM(newRawProductEl);
@@ -11030,6 +11028,7 @@
 	                p.applyState("ready");
 	            }
 	        });
+	        return p;
 	    };
 
 	    ListTemplate.prototype.remove = function(p) {
@@ -11336,7 +11335,7 @@
 
 /***/ },
 /* 11 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	
 	//{
@@ -11344,6 +11343,7 @@
 	//    default: ""
 	//}
 	module.exports = (function(){
+	    const $ = __webpack_require__(7);
 	    function TemplateProduct(fields, p, params){
 
 	        p = p || {};
@@ -11370,6 +11370,11 @@
 	        this.fields = fields;
 	    }
 
+	    function textareaResize(el) {
+	        el.style.height = '0px';
+	        el.style.height = el.scrollHeight + 'px';
+	    }
+
 	    TemplateProduct.prototype.linkToDOM = function(d) {
 	        this.root =    d;
 	        this.applyState("ready");
@@ -11382,6 +11387,13 @@
 	                this.el[name].off("change");
 	            this.el[name] = el;
 	        }.bind(this));
+
+	        this.root.find("textarea").each(function(i, el) {
+	            textareaResize(el);
+	            $(el).on("input", function(){
+	                textareaResize(el);
+	            })
+	        });
 
 	        return this;
 	    };
@@ -11688,9 +11700,16 @@
 	                got: function (products) {
 	                    if(products.length === 0) {
 	                        dailyPartsNames.forEach(function(part){
-	                            generalList.addProduct(new ProductTemplate({id: part}))
+	                            generalList.addProduct(new ProductTemplate({id: part}));
 	                        });
 	                    }
+
+	                    var i = 0;
+	                    Object.keys(generalList.products).forEach(function(key){
+	                        var el = generalList.products[key].getEl();
+	                        el.find(".daily-lable").val(dailyPartsNames[i]);
+	                        i++;
+	                    });
 	                },
 
 	                TemplateProduct: ProductTemplate,
@@ -11720,7 +11739,6 @@
 	        }
 
 	        const newRawProductEl = $("#new-daily-product");
-	        additionalListEl.append(newRawProductEl.append(generalTemplate.clone()));
 
 	        const addRawProductEl = $("#add-daily-product");
 

@@ -56,9 +56,16 @@ module.exports = (function(){
                 got: function (products) {
                     if(products.length === 0) {
                         dailyPartsNames.forEach(function(part){
-                            generalList.addProduct(new ProductTemplate({id: part}))
+                            generalList.addProduct(new ProductTemplate({id: part}));
                         });
                     }
+
+                    var i = 0;
+                    Object.keys(generalList.products).forEach(function(key){
+                        var el = generalList.products[key].getEl();
+                        el.find(".daily-lable").val(dailyPartsNames[i]);
+                        i++;
+                    });
                 },
 
                 TemplateProduct: ProductTemplate,
@@ -88,7 +95,6 @@ module.exports = (function(){
         }
 
         const newRawProductEl = $("#new-daily-product");
-        additionalListEl.append(newRawProductEl.append(generalTemplate.clone()));
 
         const addRawProductEl = $("#add-daily-product");
 

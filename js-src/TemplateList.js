@@ -70,6 +70,7 @@ module.exports = (function(){
                 p.applyState("ready");
             }
         });
+        return p;
     };
 
     ListTemplate.prototype.remove = function(p) {
