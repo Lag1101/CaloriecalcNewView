@@ -10,7 +10,9 @@ module.exports = (function(){
     const TemplateList = require("./TemplateList");
     const Template = require("./Template");
     const PubSub = require("pubsub-js");
-    const list = $("#daily-list");
+    const generalListEl = $("#daily-general-list");
+    const additionalListEl = $("#daily-additional-list");
+    const DailyPicker = $("#daily-picker");
 
     const ProductTemplate = require("./TemplateProduct").bind(null , [
         {name: "description", default: ""},
@@ -21,7 +23,8 @@ module.exports = (function(){
         {name: "details", default: ""}
     ]);
 
-    const template = new Template("#daily-product-template");
+    const generalTemplate = new Template("#daily-general-product-template");
+    const additionalTemplate = new Template("#daily-additional-product-template");
 
     const dailyPartsNames = [
         "breakfast",
@@ -32,36 +35,100 @@ module.exports = (function(){
         "bedtime"
     ];
 
-    const dailyParts = dailyPartsNames.map(function(name){
-        var el = list.find("." + name);
-        return new ProductTemplate({id: name}).linkToDOM(el);
-    });
-
     function onDBReady(DB) {
-        const componentsList = new TemplateList({
-            collection:  DB.getChild('daily').getChild(new Date().getDate()),
-            changed: function(prev, current) {
+        var generalList = null;
+        var additionalList = null;
+        function constructByDate(date) {
+            if(generalList) generalList.clear();
+            if(additionalList) additionalList.clear();
 
-            },
-            removed: function (p) {
+            generalList = new TemplateList({
+                collection:  DB.getChild('daily').getChild("general").getChild(date),
+                changed: function(prev, current) {
 
-            },
-            added: function (p) {
+                },
+                removed: function (p) {
 
-            },
-            got: function (products) {
-                if(products.length === 0) {
-                    dailyParts.forEach(function(part){
-                        componentsList.addProduct()
-                    });
-                }
-            },
+                },
+                added: function (p) {
 
-            TemplateProduct: ProductTemplate,
-            listEl: list,
-            template: template
+                },
+                got: function (products) {
+                    if(products.length === 0) {
+                        dailyPartsNames.forEach(function(part){
+                            generalList.addProduct(new ProductTemplate({id: part}))
+                        });
+                    }
+                },
+
+                TemplateProduct: ProductTemplate,
+                listEl: generalListEl,
+                template: generalTemplate
+            });
+
+            additionalList = new TemplateList({
+                collection:  DB.getChild('daily').getChild("additional").getChild(date),
+                changed: function(prev, current) {
+
+                },
+                removed: function (p) {
+
+                },
+                added: function (p) {
+
+                },
+                got: function (products) {
+
+                },
+
+                TemplateProduct: ProductTemplate,
+                listEl: additionalListEl,
+                template: additionalTemplate
+            });
+        }
+
+        const newRawProductEl = $("#new-daily-product");
+        additionalListEl.append(newRawProductEl.append(generalTemplate.clone()));
+
+        const addRawProductEl = $("#add-daily-product");
+
+        const newRawProduct = new ProductTemplate({id: "new-daily-product"}).linkToDOM(newRawProductEl);
+
+        addRawProductEl.click(function(){
+            console.log(newRawProduct.getItems());
+            additionalList.addProduct(newRawProduct.getItems());
         });
 
+        function today() {
+            var now = new Date();
+
+            var day = ("0" + now.getDate()).slice(-2);
+            var month = ("0" + (now.getMonth() + 1)).slice(-2);
+
+            return now.getFullYear()+"-"+(month)+"-"+(day) ;
+        }
+
+        DB.getChild('daily').getChild("lastDay").getValue(function(err, date){
+            if(err) {
+                ErrorWrapper(err);
+            } else if(!date) {
+                DailyPicker.val(today());
+                DB.getChild('daily').getChild("lastDay").set(DailyPicker.val(), function(err) {
+                    if(err) ErrorWrapper(err);
+                });
+                constructByDate(DailyPicker.val())
+            } else {
+                DailyPicker.val(date);
+                constructByDate(date)
+            }
+        });
+
+        DailyPicker.on("change", function(){
+            DB.getChild('daily').getChild("lastDay").set(DailyPicker.val(), function(err) {
+                if(err) ErrorWrapper(err);
+            });
+            constructByDate(DailyPicker.val())
+        });
     }
 
     return onDBReady;

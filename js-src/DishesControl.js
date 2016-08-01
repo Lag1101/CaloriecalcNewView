@@ -70,10 +70,7 @@ module.exports = (function(){
 
             },
             added: function (p) {
-                PubSub.publish( 'ComponentChanged', {
-                    prev: new Dish(),
-                    current: new Dish({items: p.getItems()})
-                } );
+
             },
             got: function (products) {
                 PubSub.publish( 'ComponentsListReady', products );
@@ -82,9 +79,6 @@ module.exports = (function(){
             TemplateProduct: Dish,
             listEl: $("#dish-list"),
             template: template
-        });
-        PubSub.subscribe( 'AddRawProductToComponents', function(msg, items){
-            dishList.addProduct(items);
         });
 
         addNewDishEl.click(function(){

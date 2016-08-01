@@ -9,6 +9,7 @@ module.exports = (function(){
     const TemplateList = require("./TemplateList");
     const Template = require("./Template");
     const PubSub = require("pubsub-js");
+    const FirebaseWrapper = require("./FirebaseWrapper");
 
     const Component = require("./TemplateProduct").bind(null , [
         {name: "description", default: ""},
@@ -36,13 +37,27 @@ module.exports = (function(){
                 });
             },
             got: function (products) {
-
+                if(products.length === 0) {
+                    new FirebaseWrapper.DB("TemplateRawProducts").getChild('/').getValue(function(err, res) {
+                        if(err){
+                            ErrorWrapper(err);
+                        } else {
+                            downloadDefaults(res);
+                        }
+                    });
+                }
             },
 
             TemplateProduct: Component,
             listEl: $("#raw-product-list"),
             template: template
         });
+
+        function downloadDefaults(defaults) {
+            Object.keys(defaults).map(function(id){
+                componentsList.addProduct(defaults[id]);
+            });
+        }
 
         const newRawProductEl = $("#new-raw-product");
         newRawProductEl.append(template.clone());

@@ -14,6 +14,7 @@ module.exports = (function(){
         this.listEl = this.params.listEl;
         this.TemplateProduct = this.params.TemplateProduct;
 
+        this.products = {};
 
         this.collection.getValue(function(err, res) {
             if(err) {
@@ -50,6 +51,8 @@ module.exports = (function(){
 
         el.find(".remove").click(this.remove.bind(this, p));
 
+        this.products[id] = p;
+
         this.params.added && this.params.added(p);
 
         return p;
@@ -67,7 +70,6 @@ module.exports = (function(){
                 p.applyState("ready");
             }
         });
-        this.params.added && this.params.added(p);
     };
 
     ListTemplate.prototype.remove = function(p) {
@@ -84,8 +86,14 @@ module.exports = (function(){
             }
         }.bind(this));
         p.getEl().remove();
+        delete this.products[p.getId()];
 
         this.params.removed && this.params.removed(p);
+    };
+
+    ListTemplate.prototype.clear = function () {
+        this.products = {};
+        this.listEl.children().remove();
     };
 
     return ListTemplate;

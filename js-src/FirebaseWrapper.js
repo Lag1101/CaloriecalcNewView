@@ -77,7 +77,7 @@ module.exports = (function(){
                 return cb && cb(err);
             })
             .then(function(res){
-                return cb && cb(res);
+                return cb && cb(null, res);
             });
     };
 

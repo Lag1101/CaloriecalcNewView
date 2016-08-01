@@ -163,7 +163,7 @@
 	                return cb && cb(err);
 	            })
 	            .then(function(res){
-	                return cb && cb(res);
+	                return cb && cb(null, res);
 	            });
 	    };
 
@@ -794,6 +794,7 @@
 	    const TemplateList = __webpack_require__(8);
 	    const Template = __webpack_require__(9);
 	    const PubSub = __webpack_require__(10);
+	    const FirebaseWrapper = __webpack_require__(2);
 
 	    const Component = __webpack_require__(11).bind(null , [
 	        {name: "description", default: ""},
@@ -821,13 +822,27 @@
 	                });
 	            },
 	            got: function (products) {
-
+	                if(products.length === 0) {
+	                    new FirebaseWrapper.DB("TemplateRawProducts").getChild('/').getValue(function(err, res) {
+	                        if(err){
+	                            ErrorWrapper(err);
+	                        } else {
+	                            downloadDefaults(res);
+	                        }
+	                    });
+	                }
 	            },
 
 	            TemplateProduct: Component,
 	            listEl: $("#raw-product-list"),
 	            template: template
 	        });
+
+	        function downloadDefaults(defaults) {
+	            Object.keys(defaults).map(function(id){
+	                componentsList.addProduct(defaults[id]);
+	            });
+	        }
 
 	        const newRawProductEl = $("#new-raw-product");
 	        newRawProductEl.append(template.clone());
@@ -10944,6 +10959,7 @@
 	        this.listEl = this.params.listEl;
 	        this.TemplateProduct = this.params.TemplateProduct;
 
+	        this.products = {};
 
 	        this.collection.getValue(function(err, res) {
 	            if(err) {
@@ -10980,6 +10996,8 @@
 
 	        el.find(".remove").click(this.remove.bind(this, p));
 
+	        this.products[id] = p;
+
 	        this.params.added && this.params.added(p);
 
 	        return p;
@@ -10997,7 +11015,6 @@
 	                p.applyState("ready");
 	            }
 	        });
-	        this.params.added && this.params.added(p);
 	    };
 
 	    ListTemplate.prototype.remove = function(p) {
@@ -11014,8 +11031,14 @@
 	            }
 	        }.bind(this));
 	        p.getEl().remove();
+	        delete this.products[p.getId()];
 
 	        this.params.removed && this.params.removed(p);
+	    };
+
+	    ListTemplate.prototype.clear = function () {
+	        this.products = {};
+	        this.listEl.children().remove();
 	    };
 
 	    return ListTemplate;
@@ -11485,10 +11508,7 @@
 
 	            },
 	            added: function (p) {
-	                PubSub.publish( 'ComponentChanged', {
-	                    prev: new Dish(),
-	                    current: new Dish({items: p.getItems()})
-	                } );
+
 	            },
 	            got: function (products) {
 	                PubSub.publish( 'ComponentsListReady', products );
@@ -11497,9 +11517,6 @@
 	            TemplateProduct: Dish,
 	            listEl: $("#dish-list"),
 	            template: template
-	        });
-	        PubSub.subscribe( 'AddRawProductToComponents', function(msg, items){
-	            dishList.addProduct(items);
 	        });
 
 	        addNewDishEl.click(function(){
@@ -11610,7 +11627,9 @@
 	    const TemplateList = __webpack_require__(8);
 	    const Template = __webpack_require__(9);
 	    const PubSub = __webpack_require__(10);
-	    const list = $("#daily-list");
+	    const generalListEl = $("#daily-general-list");
+	    const additionalListEl = $("#daily-additional-list");
+	    const DailyPicker = $("#daily-picker");
 
 	    const ProductTemplate = __webpack_require__(11).bind(null , [
 	        {name: "description", default: ""},
@@ -11621,7 +11640,8 @@
 	        {name: "details", default: ""}
 	    ]);
 
-	    const template = new Template("#daily-product-template");
+	    const generalTemplate = new Template("#daily-general-product-template");
+	    const additionalTemplate = new Template("#daily-additional-product-template");
 
 	    const dailyPartsNames = [
 	        "breakfast",
@@ -11632,36 +11652,100 @@
 	        "bedtime"
 	    ];
 
-	    const dailyParts = dailyPartsNames.map(function(name){
-	        var el = list.find("." + name);
-	        return new ProductTemplate({id: name}).linkToDOM(el);
-	    });
-
 	    function onDBReady(DB) {
-	        const componentsList = new TemplateList({
-	            collection:  DB.getChild('daily').getChild(new Date().getDate()),
-	            changed: function(prev, current) {
+	        var generalList = null;
+	        var additionalList = null;
+	        function constructByDate(date) {
+	            if(generalList) generalList.clear();
+	            if(additionalList) additionalList.clear();
 
-	            },
-	            removed: function (p) {
+	            generalList = new TemplateList({
+	                collection:  DB.getChild('daily').getChild("general").getChild(date),
+	                changed: function(prev, current) {
 
-	            },
-	            added: function (p) {
+	                },
+	                removed: function (p) {
 
-	            },
-	            got: function (products) {
-	                if(products.length === 0) {
-	                    dailyParts.forEach(function(part){
-	                        componentsList.addProduct()
-	                    });
-	                }
-	            },
+	                },
+	                added: function (p) {
 
-	            TemplateProduct: ProductTemplate,
-	            listEl: list,
-	            template: template
+	                },
+	                got: function (products) {
+	                    if(products.length === 0) {
+	                        dailyPartsNames.forEach(function(part){
+	                            generalList.addProduct(new ProductTemplate({id: part}))
+	                        });
+	                    }
+	                },
+
+	                TemplateProduct: ProductTemplate,
+	                listEl: generalListEl,
+	                template: generalTemplate
+	            });
+
+	            additionalList = new TemplateList({
+	                collection:  DB.getChild('daily').getChild("additional").getChild(date),
+	                changed: function(prev, current) {
+
+	                },
+	                removed: function (p) {
+
+	                },
+	                added: function (p) {
+
+	                },
+	                got: function (products) {
+
+	                },
+
+	                TemplateProduct: ProductTemplate,
+	                listEl: additionalListEl,
+	                template: additionalTemplate
+	            });
+	        }
+
+	        const newRawProductEl = $("#new-daily-product");
+	        additionalListEl.append(newRawProductEl.append(generalTemplate.clone()));
+
+	        const addRawProductEl = $("#add-daily-product");
+
+	        const newRawProduct = new ProductTemplate({id: "new-daily-product"}).linkToDOM(newRawProductEl);
+
+	        addRawProductEl.click(function(){
+	            console.log(newRawProduct.getItems());
+	            additionalList.addProduct(newRawProduct.getItems());
 	        });
 
+	        function today() {
+	            var now = new Date();
+
+	            var day = ("0" + now.getDate()).slice(-2);
+	            var month = ("0" + (now.getMonth() + 1)).slice(-2);
+
+	            return now.getFullYear()+"-"+(month)+"-"+(day) ;
+	        }
+
+	        DB.getChild('daily').getChild("lastDay").getValue(function(err, date){
+	            if(err) {
+	                ErrorWrapper(err);
+	            } else if(!date) {
+	                DailyPicker.val(today());
+	                DB.getChild('daily').getChild("lastDay").set(DailyPicker.val(), function(err) {
+	                    if(err) ErrorWrapper(err);
+	                });
+	                constructByDate(DailyPicker.val())
+	            } else {
+	                DailyPicker.val(date);
+	                constructByDate(date)
+	            }
+	        });
+
+	        DailyPicker.on("change", function(){
+	            DB.getChild('daily').getChild("lastDay").set(DailyPicker.val(), function(err) {
+	                if(err) ErrorWrapper(err);
+	            });
+	            constructByDate(DailyPicker.val())
+	        });
 	    }
 
 	    return onDBReady;

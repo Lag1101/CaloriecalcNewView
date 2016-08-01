@@ -7,35 +7,42 @@
     <link rel="stylesheet" type="text/css" href="css/product.css">
 </head>
 <body>
-    <div id="raw-product-list">
+    <div id="daily">
+        <label>
+            <input id="daily-picker" type="date">
+        </label>
+        <h2>Дневное расписание</h2>
+        <h3>general</h3>
+        <div id="daily-general-list"></div>
+        <h3>additional</h3>
         <div>
-            <button id="add-raw-product">add to raw-product-list</button>
-            <div id="new-raw-product"></div>
+            <button id="add-daily-product">add daily</button>
+            <div id="new-daily-product"></div>
         </div>
-        <h2>Продукты</h2>
+        <div id="daily-additional-list"></div>
+    </div>
+
+    <div id="dish-list">
+        <h2>Список блюд</h2>
+        <div>
+            <button id="add-new-dish">add to dish-list</button>
+            <div id="new-dish"></div>
+        </div>
     </div>
 
     <div id="components-list">
         <h2>Компоненты блюда</h2>
     </div>
 
-    <div id="dish-list">
+    <div id="raw-product-list">
+        <h2>Продукты</h2>
         <div>
-            <button id="add-new-dish">add to dish-list</button>
-            <div id="new-dish"></div>
+            <button id="add-raw-product">add to raw-product-list</button>
+            <div id="new-raw-product"></div>
         </div>
-        <h2>Список блюд</h2>
     </div>
 
-    <div id="daily-list">
-        <h2>Дневное расписание</h2>
-        <div class="daily-product breakfast"></div>
-        <div class="daily-product lunch"></div>
-        <div class="daily-product dinner"></div>
-        <div class="daily-product snack"></div>
-        <div class="daily-product second-dinner"></div>
-        <div class="daily-product bedtime"></div>
-    </div>
+
 
     <div id="component-template" class="hidden">
         <div>
@@ -83,7 +90,7 @@
             </div>
         </div>
     </div>
-    <div id="daily-product-template" class="hidden">
+    <div id="daily-general-product-template" class="hidden">
         <div>
             <div class="daily-product">
                 <input type="text" name="description" placeholder="описание" class="product-item description">
@@ -91,7 +98,20 @@
                 <input type="number" name="triglyceride" min="0" placeholder="жиры" class="product-item triglyceride">
                 <input type="number" name="carbohydrate " min="0" placeholder="углеводы" class="product-item carbohydrate">
                 <input type="number" name="calories" min="0" placeholder="углеводы" class="product-item calories">
+                <input type="text" name="details" placeholder="описание" class="product-item details">
+            </div>
+        </div>
+    </div>
+    <div id="daily-additional-product-template" class="hidden">
+        <div>
+            <button class="remove">-</button>
+            <div class="daily-product">
                 <input type="text" name="description" placeholder="описание" class="product-item description">
+                <input type="number" name="proteins" min="0" placeholder="белки" class="product-item proteins">
+                <input type="number" name="triglyceride" min="0" placeholder="жиры" class="product-item triglyceride">
+                <input type="number" name="carbohydrate " min="0" placeholder="углеводы" class="product-item carbohydrate">
+                <input type="number" name="calories" min="0" placeholder="углеводы" class="product-item calories">
+                <input type="text" name="details" placeholder="описание" class="product-item details">
             </div>
         </div>
     </div>
