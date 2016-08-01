@@ -13,3 +13,9 @@
 .error-state{
     background-color: red;
 }
+
+#raw-product-list{
+    height: 640px;
+    overflow: hidden;
+    overflow-y: scroll;
+}

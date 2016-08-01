@@ -795,6 +795,7 @@
 	    const Template = __webpack_require__(9);
 	    const PubSub = __webpack_require__(10);
 	    const FirebaseWrapper = __webpack_require__(2);
+	    const RawProductsFilter = $("#raw-products-filter");
 
 	    const Component = __webpack_require__(11).bind(null , [
 	        {name: "description", default: ""},
@@ -853,6 +854,20 @@
 
 	        addRawProductEl.click(function(){
 	            componentsList.addProduct(newRawProduct.getItems());
+	        });
+
+	        RawProductsFilter.on("input", function(){
+	            var text = RawProductsFilter.val().toLowerCase();
+	            Object.keys(componentsList.products).forEach(function(key){
+	                var p = componentsList.products[key];
+
+	                if(p.getItems().description.toLowerCase().indexOf(text) < 0) {
+	                    p.getEl().addClass("hidden")
+	                } else {
+	                    p.getEl().removeClass("hidden")
+	                }
+
+	            });
 	        });
 	    }
 

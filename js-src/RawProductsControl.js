@@ -10,6 +10,7 @@ module.exports = (function(){
     const Template = require("./Template");
     const PubSub = require("pubsub-js");
     const FirebaseWrapper = require("./FirebaseWrapper");
+    const RawProductsFilter = $("#raw-products-filter");
 
     const Component = require("./TemplateProduct").bind(null , [
         {name: "description", default: ""},
@@ -68,6 +69,20 @@ module.exports = (function(){
 
         addRawProductEl.click(function(){
             componentsList.addProduct(newRawProduct.getItems());
+        });
+
+        RawProductsFilter.on("input", function(){
+            var text = RawProductsFilter.val().toLowerCase();
+            Object.keys(componentsList.products).forEach(function(key){
+                var p = componentsList.products[key];
+
+                if(p.getItems().description.toLowerCase().indexOf(text) < 0) {
+                    p.getEl().addClass("hidden")
+                } else {
+                    p.getEl().removeClass("hidden")
+                }
+
+            });
         });
     }
 
