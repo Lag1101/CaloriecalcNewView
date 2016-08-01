@@ -59,6 +59,10 @@ module.exports = (function(){
         return this;
     };
 
+    TemplateProduct.prototype.setOnChange = function(cb) {
+        this.params.onChange = cb;
+    };
+
     TemplateProduct.prototype.onChange = function(name) {
         var previosState = new  TemplateProduct(this.fields, {items: this.getItems()});
         this.items[name] = this.el[name].val();
@@ -107,6 +111,12 @@ module.exports = (function(){
             if(newNames.indexOf(name) < 0) return;
 
             this.items[name] = items[name];
+        }.bind(this));
+    };
+
+    TemplateProduct.prototype.setItemsToDefault = function() {
+        this.fields.forEach(function(f){
+            this.items[f.name] = f.default;
         }.bind(this));
     };
 

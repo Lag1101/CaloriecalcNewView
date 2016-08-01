@@ -15,6 +15,7 @@ module.exports = (function(){
         this.TemplateProduct = this.params.TemplateProduct;
 
         this.products = {};
+        this.productsList = [];
 
         this.collection.getValue(function(err, res) {
             if(err) {
@@ -52,6 +53,7 @@ module.exports = (function(){
         el.find(".remove").click(this.remove.bind(this, p));
 
         this.products[id] = p;
+        this.productsList.push(p);
 
         this.params.added && this.params.added(p);
 
@@ -87,6 +89,14 @@ module.exports = (function(){
             }
         }.bind(this));
         p.getEl().remove();
+
+        for(var i = 0; i < this.productsList.length; i++){
+            if (p.getId() === this.productsList[i].getId()) {
+                this.productsList.splice(i, 1);
+                break;
+            }
+        }
+
         delete this.products[p.getId()];
 
         this.params.removed && this.params.removed(p);
@@ -94,6 +104,7 @@ module.exports = (function(){
 
     ListTemplate.prototype.clear = function () {
         this.products = {};
+        this.productsList = [];
         this.listEl.children().remove();
     };
 

@@ -20,7 +20,62 @@
                 </label>
             </div>
             <div class="panel-body">
-                <div id="daily-general-list"></div>
+                <div id="daily-general-list">
+                    <div class="daily-product input-group input-group-sm breakfast">
+                        <input disabled type="text" class="daily-lable daily-item" value="breakfast">
+                        <input type="text" name="description" placeholder="описание" class="daily-item description">
+                        <input type="number" name="proteins" min="0" placeholder="белки" class="daily-item proteins">
+                        <input type="number" name="triglyceride" min="0" placeholder="жиры" class="daily-item triglyceride">
+                        <input type="number" name="carbohydrate " min="0" placeholder="углеводы" class="daily-item carbohydrate">
+                        <input type="number" name="calories" min="0" placeholder="углеводы" class="daily-item calories">
+                        <textarea name="details" placeholder="детали" class="daily-item details"></textarea>
+                    </div>
+                    <div class="daily-product input-group input-group-sm lunch">
+                        <input disabled type="text" class="daily-lable daily-item" value="lunch">
+                        <input type="text" name="description" placeholder="описание" class="daily-item description">
+                        <input type="number" name="proteins" min="0" placeholder="белки" class="daily-item proteins">
+                        <input type="number" name="triglyceride" min="0" placeholder="жиры" class="daily-item triglyceride">
+                        <input type="number" name="carbohydrate " min="0" placeholder="углеводы" class="daily-item carbohydrate">
+                        <input type="number" name="calories" min="0" placeholder="углеводы" class="daily-item calories">
+                        <textarea name="details" placeholder="детали" class="daily-item details"></textarea>
+                    </div>
+                    <div class="daily-product input-group input-group-sm dinner">
+                        <input disabled type="text" class="daily-lable daily-item" value="dinner">
+                        <input type="text" name="description" placeholder="описание" class="daily-item description">
+                        <input type="number" name="proteins" min="0" placeholder="белки" class="daily-item proteins">
+                        <input type="number" name="triglyceride" min="0" placeholder="жиры" class="daily-item triglyceride">
+                        <input type="number" name="carbohydrate " min="0" placeholder="углеводы" class="daily-item carbohydrate">
+                        <input type="number" name="calories" min="0" placeholder="углеводы" class="daily-item calories">
+                        <textarea name="details" placeholder="детали" class="daily-item details"></textarea>
+                    </div>
+                    <div class="daily-product input-group input-group-sm snack">
+                        <input disabled type="text" class="daily-lable daily-item" value="snack">
+                        <input type="text" name="description" placeholder="описание" class="daily-item description">
+                        <input type="number" name="proteins" min="0" placeholder="белки" class="daily-item proteins">
+                        <input type="number" name="triglyceride" min="0" placeholder="жиры" class="daily-item triglyceride">
+                        <input type="number" name="carbohydrate " min="0" placeholder="углеводы" class="daily-item carbohydrate">
+                        <input type="number" name="calories" min="0" placeholder="углеводы" class="daily-item calories">
+                        <textarea name="details" placeholder="детали" class="daily-item details"></textarea>
+                    </div>
+                    <div class="daily-product input-group input-group-sm second-dinner">
+                        <input disabled type="text" class="daily-lable daily-item" value="second-dinner">
+                        <input type="text" name="description" placeholder="описание" class="daily-item description">
+                        <input type="number" name="proteins" min="0" placeholder="белки" class="daily-item proteins">
+                        <input type="number" name="triglyceride" min="0" placeholder="жиры" class="daily-item triglyceride">
+                        <input type="number" name="carbohydrate " min="0" placeholder="углеводы" class="daily-item carbohydrate">
+                        <input type="number" name="calories" min="0" placeholder="углеводы" class="daily-item calories">
+                        <textarea name="details" placeholder="детали" class="daily-item details"></textarea>
+                    </div>
+                    <div class="daily-product input-group input-group-sm bedtime">
+                        <input disabled type="text" class="daily-lable daily-item" value="bedtime">
+                        <input type="text" name="description" placeholder="описание" class="daily-item description">
+                        <input type="number" name="proteins" min="0" placeholder="белки" class="daily-item proteins">
+                        <input type="number" name="triglyceride" min="0" placeholder="жиры" class="daily-item triglyceride">
+                        <input type="number" name="carbohydrate " min="0" placeholder="углеводы" class="daily-item carbohydrate">
+                        <input type="number" name="calories" min="0" placeholder="углеводы" class="daily-item calories">
+                        <textarea name="details" placeholder="детали" class="daily-item details"></textarea>
+                    </div>
+                </div>
                 <div id="daily-additional-list"></div>
                 <div id="new-daily-product" class="daily-product input-group input-group-sm">
                     <button id="add-daily-product" class="daily-item">+</button>
@@ -105,31 +160,25 @@
 
 
     <div id="component-template" class="hidden">
-        <div class="">
-            <div class="">
-                <div class="component input-group input-group-sm">
-                    <button class="remove">-</button>
-                    <input type="text" name="description" placeholder="описание" class="component-item description">
-                    <input type="number" name="proteins" min="0" placeholder="белки" class="component-item proteins">
-                    <input type="number" name="triglyceride" min="0" placeholder="жиры" class="component-item triglyceride">
-                    <input type="number" name="carbohydrate " min="0" placeholder="углеводы" class="component-item carbohydrate">
-                    <input type="number" name="calories" min="0" placeholder="углеводы" class="component-item calories">
-                    <input type="number" name="mass" min="0" placeholder="масса, гр" class="component-item mass">
-                </div>
-            </div>
+        <div class="component input-group input-group-sm">
+            <button class="remove">-</button>
+            <input type="text" name="description" placeholder="описание" class="component-item description">
+            <input type="number" name="proteins" min="0" placeholder="белки" class="component-item proteins">
+            <input type="number" name="triglyceride" min="0" placeholder="жиры" class="component-item triglyceride">
+            <input type="number" name="carbohydrate " min="0" placeholder="углеводы" class="component-item carbohydrate">
+            <input type="number" name="calories" min="0" placeholder="углеводы" class="component-item calories">
+            <input type="number" name="mass" min="0" placeholder="масса, гр" class="component-item mass">
         </div>
     </div>
     <div id="raw-product-template" class="hidden">
-        <div class="">
-            <div class="raw-product input-group input-group-sm">
-                <button class="add-to-components">+</button>
-                <button class="remove">-</button>
-                <input type="text" name="description" placeholder="описание" class="product-item description">
-                <input type="number" name="proteins" min="0" placeholder="белки" class="product-item proteins">
-                <input type="number" name="triglyceride" min="0" placeholder="жиры" class="product-item triglyceride">
-                <input type="number" name="carbohydrate " min="0" placeholder="углеводы" class=" product-item carbohydrate">
-                <input type="number" name="calories" min="0" placeholder="углеводы" class="product-item calories">
-            </div>
+        <div class="raw-product input-group input-group-sm">
+            <button class="add-to-components">+</button>
+            <button class="remove">-</button>
+            <input type="text" name="description" placeholder="описание" class="product-item description">
+            <input type="number" name="proteins" min="0" placeholder="белки" class="product-item proteins">
+            <input type="number" name="triglyceride" min="0" placeholder="жиры" class="product-item triglyceride">
+            <input type="number" name="carbohydrate " min="0" placeholder="углеводы" class=" product-item carbohydrate">
+            <input type="number" name="calories" min="0" placeholder="углеводы" class="product-item calories">
         </div>
     </div>
     <div id="dish-template" class="hidden">
@@ -149,16 +198,14 @@
         </div>
     </div>
     <div id="daily-general-product-template" class="hidden">
-        <div>
-            <div class="daily-product input-group input-group-sm">
-                <input disabled type="text" class="daily-lable daily-item">
-                <input type="text" name="description" placeholder="описание" class="daily-item description">
-                <input type="number" name="proteins" min="0" placeholder="белки" class="daily-item proteins">
-                <input type="number" name="triglyceride" min="0" placeholder="жиры" class="daily-item triglyceride">
-                <input type="number" name="carbohydrate " min="0" placeholder="углеводы" class="daily-item carbohydrate">
-                <input type="number" name="calories" min="0" placeholder="углеводы" class="daily-item calories">
-                <textarea name="details" placeholder="детали" class="daily-item details"></textarea>
-            </div>
+        <div class="daily-product input-group input-group-sm">
+            <input disabled type="text" class="daily-lable daily-item">
+            <input type="text" name="description" placeholder="описание" class="daily-item description">
+            <input type="number" name="proteins" min="0" placeholder="белки" class="daily-item proteins">
+            <input type="number" name="triglyceride" min="0" placeholder="жиры" class="daily-item triglyceride">
+            <input type="number" name="carbohydrate " min="0" placeholder="углеводы" class="daily-item carbohydrate">
+            <input type="number" name="calories" min="0" placeholder="углеводы" class="daily-item calories">
+            <textarea name="details" placeholder="детали" class="daily-item details"></textarea>
         </div>
     </div>
     <div id="daily-additional-product-template" class="hidden">

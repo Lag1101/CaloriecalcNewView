@@ -27,7 +27,6 @@ module.exports = (function(){
     const newDishEl = $("#new-dish");
     const addNewDishEl = $("#add-new-dish");
 
-    newDishEl.append(template.clone());
     const newDish = new Dish({id: "new-raw-product"}, {onChange: function(prev, cur){
         updatePortion(cur);
     }}).linkToDOM(newDishEl);

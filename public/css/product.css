@@ -53,7 +53,6 @@ button{
 }
 
 .daily-product > textarea{
-    width: 60px;
     min-height: 24px;
     height: 24px;
     overflow: hidden;
@@ -64,4 +63,12 @@ button{
 .dish-item, .component-item, .product-item,.daily-item {
     margin: 0;
     padding: 0;
+}
+
+.daily-item{
+    width: 10%;
+}
+
+.daily-item.description, .daily-item.details{
+    width: 20%;
 }

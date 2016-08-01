@@ -23,7 +23,6 @@ module.exports = (function(){
         {name: "details", default: ""}
     ]);
 
-    const generalTemplate = new Template("#daily-general-product-template");
     const additionalTemplate = new Template("#daily-additional-product-template");
 
     const dailyPartsNames = [
@@ -35,43 +34,58 @@ module.exports = (function(){
         "bedtime"
     ];
 
+    const dailyParts = {};
+    dailyPartsNames.forEach(function(name){
+        dailyParts[name] = new ProductTemplate({id: name}).linkToDOM(generalListEl.find("." + name));
+    });
+
     function onDBReady(DB) {
-        var generalList = null;
         var additionalList = null;
         function constructByDate(date) {
-            if(generalList) generalList.clear();
             if(additionalList) additionalList.clear();
 
-            generalList = new TemplateList({
-                collection:  DB.getChild('daily').getChild("general").getChild(date),
-                changed: function(prev, current) {
-
-                },
-                removed: function (p) {
-
-                },
-                added: function (p) {
-
-                },
-                got: function (products) {
-                    if(products.length === 0) {
-                        dailyPartsNames.forEach(function(part){
-                            generalList.addProduct(new ProductTemplate({id: part}));
-                        });
-                    }
-
-                    var i = 0;
-                    Object.keys(generalList.products).forEach(function(key){
-                        var el = generalList.products[key].getEl();
-                        el.find(".daily-lable").val(dailyPartsNames[i]);
-                        i++;
-                    });
-                },
-
-                TemplateProduct: ProductTemplate,
-                listEl: generalListEl,
-                template: generalTemplate
+            dailyPartsNames.forEach(function(name){
+                var p = dailyParts[name];
+                p.setItemsToDefault({});
+                p.updateEl();
+                p.setOnChange();
             });
+
+            var ref = DB.getChild('daily').getChild("general").getChild(date);
+            ref.getValue(function(err, res){
+                if(err) {
+                    ErrorWrapper(err);
+                    return;
+                } else if (!res){
+                    var cur = {};
+                    dailyPartsNames.forEach(function(name){
+                        cur[name] = dailyParts[name].getItems();
+                    });
+                    DB.getChild('daily').getChild("general").getChild(date).set(cur, function(err){
+                        if (err) ErrorWrapper(err);
+                    });
+                } else {
+                    dailyPartsNames.forEach(function(name){
+                        dailyParts[name].setItems(res[name]);
+                        dailyParts[name].updateEl();
+                    });
+                }
+
+                dailyPartsNames.forEach(function(name){
+                    var p = dailyParts[name];
+                    p.setOnChange(function(prev, cur){
+                        cur.applyState("sync");
+                        ref.getChild(name).set(cur.getItems(), function(){
+                            if(err) {
+                                cur.applyState("error");
+                            } else {
+                                cur.applyState("ready");
+                            }
+                        });
+                    });
+                });
+            });
+
 
             additionalList = new TemplateList({
                 collection:  DB.getChild('daily').getChild("additional").getChild(date),
