@@ -20,16 +20,6 @@ module.exports = (function(){
 
     const auth = firebase.auth();
 
-    FirebaseWrapper.signIn = function(email, pass, cb) {
-        auth.signInWithEmailAndPassword(email,pass)
-            .catch(function(err){
-                return cb(err);
-            })
-            .then(function(user){
-                return cb(null, user.uid);
-            });
-    };
-
     const db = firebase.database();
 
     FirebaseWrapper.DB = function(uid) {
@@ -81,9 +71,99 @@ module.exports = (function(){
             });
     };
 
+    FirebaseWrapper.signIn = function(email, password, cb) {
+        auth.signInWithEmailAndPassword(email, password)
+            .then(function(){
+                return cb();
+            })
+            .catch(function(error) {
+                return cb(error);
+            });
+    };
+
+    FirebaseWrapper.signOut = function(cb) {
+        auth.signOut().catch(cb).then(cb);
+    };
+
     FirebaseWrapper.Collection.prototype.remove = function(cb) {
         this.collection.remove(cb);
     };
+
+    FirebaseWrapper.SignUp = function (email, password, cb) {
+        auth.createUserWithEmailAndPassword(email, password)
+            .then(function(){
+                return cb();
+            })
+            .catch(function(error) {
+                return cb(error);
+            });
+    };
+    /**
+     * Sends an email verification to the user.
+     */
+
+    FirebaseWrapper.createUser = function (email, password, cb) {
+        auth.createUserWithEmailAndPassword(email, password)
+            .then(function() {
+                FirebaseWrapper.sendEmailVerification(cb)
+            })
+            .catch(function(error) {
+                return cb(error);
+            });
+    };
+
+    FirebaseWrapper.sendEmailVerification = function (cb) {
+        auth.currentUser.sendEmailVerification()
+            .then(function(){
+                return cb();
+            })
+            .catch(function(error) {
+                return cb(error);
+            });
+    };
+
+    FirebaseWrapper.sendPasswordReset = function (email, cb) {
+        auth.sendPasswordResetEmail(email)
+            .then(function() {
+                return cb();
+            }).catch(function(error) {
+                return cb(error);
+            });
+    };
+
+    FirebaseWrapper.setOnSignedIn = function(cb) {
+        FirebaseWrapper.onSignedIn = cb;
+    };
+
+    FirebaseWrapper.setOnSignedOut = function(cb) {
+        FirebaseWrapper.onSignedOut = cb;
+    };
+
+    FirebaseWrapper.setOnVerified = function(cb) {
+        FirebaseWrapper.onVerified = cb;
+    };
+
+    auth.onAuthStateChanged(function(user) {
+        if (user) {
+            // User is signed in.
+            var displayName = user.displayName;
+            var email = user.email;
+            var emailVerified = user.emailVerified;
+            var photoURL = user.photoURL;
+            var isAnonymous = user.isAnonymous;
+            var uid = user.uid;
+            var refreshToken = user.refreshToken;
+            var providerData = user.providerData;
+
+
+            FirebaseWrapper.onSignedIn && FirebaseWrapper.onSignedIn(user);
+            //if (emailVerified) {
+            //    //FirebaseWrapper.onVerified && FirebaseWrapper.onVerified(user);
+            //}
+        } else {
+            FirebaseWrapper.onSignedOut && FirebaseWrapper.onSignedOut();
+        }
+    });
 
     return FirebaseWrapper
 })();

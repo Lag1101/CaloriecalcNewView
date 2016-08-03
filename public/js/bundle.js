@@ -61,21 +61,72 @@
 	(function(){
 	    const FirebaseWrapper = __webpack_require__(2);
 	    const ErrorWrapper = __webpack_require__(5);
+	    const Template = __webpack_require__(9);
 
+	    $("#sign-out").click(function(){
+	        FirebaseWrapper.signOut(function(err){
+	            if(err)ErrorWrapper(err)
+	        });
+	    });
 
-	    FirebaseWrapper.signIn('lomanovvasiliy@gmail.com','235901', function(err, uid){
-	        if(err) {
-	            ErrorWrapper(err);
-	        } else {
-	            const DB = new FirebaseWrapper.DB(uid);
+	    $("#signup").click(function(){
+	        var s = getFormSerialize(authForm);
+	        FirebaseWrapper.createUser(s.email, s.password, function(err){
+	            if(err)ErrorWrapper(err)
+	        });
+	    });
+
+	    const alertInfoTemplate = new Template("#alert-info-template");
+	    const authModal = $("#auth-modal");
+	    const authForm = $("#auth-form");
+	    const userEmailLable = $("#userEmail");
+
+	    function getFormSerialize(form){
+	        var s = {};
+	        form.serializeArray().forEach(function(o){
+	            s[o.name] = o.value;
+	        });
+	        return s;
+	    }
+
+	    authForm.on("submit", function(){
+	        var s = getFormSerialize(authForm);
+
+	        FirebaseWrapper.signIn(s.email, s.password, function(err){
+	            if(err)ErrorWrapper(err)
+	        });
+	    });
+
+	    FirebaseWrapper.setOnSignedIn(function(user){
+
+	        if(user.emailVerified){
+	            userEmailLable.text("Hello " + user.email);
+	            authModal.modal('hide');
+
+	            const DB = new FirebaseWrapper.DB(user.uid);
 
 	            __webpack_require__(6)(DB);
 	            __webpack_require__(12)(DB);
 	            __webpack_require__(13)(DB);
 	            __webpack_require__(14)(DB);
+	        } else {
+	            authModal.modal('show');
+
+	            var alertInfo = alertInfoTemplate.clone();
+	            alertInfo.find(".alert-info-text").text("Please , verify your email");
+	            authModal.find(".modal-footer").append(alertInfo);
 	        }
 	    });
+
+	    FirebaseWrapper.setOnSignedOut(function(){
+	        authModal.modal('show');
+	    });
+
+	    FirebaseWrapper.setOnVerified(function(){
+	        console.log("verified");
+	    });
 	})();
+
 
 
 
@@ -105,16 +156,6 @@
 	    const FirebaseWrapper = {};
 
 	    const auth = firebase.auth();
-
-	    FirebaseWrapper.signIn = function(email, pass, cb) {
-	        auth.signInWithEmailAndPassword(email,pass)
-	            .catch(function(err){
-	                return cb(err);
-	            })
-	            .then(function(user){
-	                return cb(null, user.uid);
-	            });
-	    };
 
 	    const db = firebase.database();
 
@@ -167,9 +208,99 @@
 	            });
 	    };
 
+	    FirebaseWrapper.signIn = function(email, password, cb) {
+	        auth.signInWithEmailAndPassword(email, password)
+	            .then(function(){
+	                return cb();
+	            })
+	            .catch(function(error) {
+	                return cb(error);
+	            });
+	    };
+
+	    FirebaseWrapper.signOut = function(cb) {
+	        auth.signOut().catch(cb).then(cb);
+	    };
+
 	    FirebaseWrapper.Collection.prototype.remove = function(cb) {
 	        this.collection.remove(cb);
 	    };
+
+	    FirebaseWrapper.SignUp = function (email, password, cb) {
+	        auth.createUserWithEmailAndPassword(email, password)
+	            .then(function(){
+	                return cb();
+	            })
+	            .catch(function(error) {
+	                return cb(error);
+	            });
+	    };
+	    /**
+	     * Sends an email verification to the user.
+	     */
+
+	    FirebaseWrapper.createUser = function (email, password, cb) {
+	        auth.createUserWithEmailAndPassword(email, password)
+	            .then(function() {
+	                FirebaseWrapper.sendEmailVerification(cb)
+	            })
+	            .catch(function(error) {
+	                return cb(error);
+	            });
+	    };
+
+	    FirebaseWrapper.sendEmailVerification = function (cb) {
+	        auth.currentUser.sendEmailVerification()
+	            .then(function(){
+	                return cb();
+	            })
+	            .catch(function(error) {
+	                return cb(error);
+	            });
+	    };
+
+	    FirebaseWrapper.sendPasswordReset = function (email, cb) {
+	        auth.sendPasswordResetEmail(email)
+	            .then(function() {
+	                return cb();
+	            }).catch(function(error) {
+	                return cb(error);
+	            });
+	    };
+
+	    FirebaseWrapper.setOnSignedIn = function(cb) {
+	        FirebaseWrapper.onSignedIn = cb;
+	    };
+
+	    FirebaseWrapper.setOnSignedOut = function(cb) {
+	        FirebaseWrapper.onSignedOut = cb;
+	    };
+
+	    FirebaseWrapper.setOnVerified = function(cb) {
+	        FirebaseWrapper.onVerified = cb;
+	    };
+
+	    auth.onAuthStateChanged(function(user) {
+	        if (user) {
+	            // User is signed in.
+	            var displayName = user.displayName;
+	            var email = user.email;
+	            var emailVerified = user.emailVerified;
+	            var photoURL = user.photoURL;
+	            var isAnonymous = user.isAnonymous;
+	            var uid = user.uid;
+	            var refreshToken = user.refreshToken;
+	            var providerData = user.providerData;
+
+
+	            FirebaseWrapper.onSignedIn && FirebaseWrapper.onSignedIn(user);
+	            //if (emailVerified) {
+	            //    //FirebaseWrapper.onVerified && FirebaseWrapper.onVerified(user);
+	            //}
+	        } else {
+	            FirebaseWrapper.onSignedOut && FirebaseWrapper.onSignedOut();
+	        }
+	    });
 
 	    return FirebaseWrapper
 	})();
@@ -774,6 +905,13 @@
 
 	module.exports = (function(){
 	    function ErrorWrapper(err) {
+	        const errorModal = $("#error-modal");
+	        const errorText = errorModal.find(".alert-error-text");
+
+	        errorText.text(err);
+
+	        errorModal.modal("show");
+
 	        console.log(err);
 	    }
 	    return ErrorWrapper;

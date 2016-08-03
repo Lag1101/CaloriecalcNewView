@@ -40,9 +40,9 @@
 .dish-item.description{
     width: 20%;
 }
-button{
-    width: 30px;
-}
+/*button{*/
+    /*width: 30px;*/
+/*}*/
 
 .daily-product > .daily-lable{
     width: 60px;
@@ -71,4 +71,12 @@ button{
 
 .daily-item.description, .daily-item.details{
     width: 20%;
+}
+
+body.modal-open .blur-on-modal{
+    -webkit-filter: blur(10px);
+    -moz-filter: blur(10px);
+    -o-filter: blur(10px);
+    -ms-filter: blur(10px);
+    filter: blur(10px);
 }
