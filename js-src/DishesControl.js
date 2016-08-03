@@ -3,7 +3,7 @@
  */
 
 module.exports = (function(){
-    const $ = require("jquery");
+    //const $ = require("jquery");
     const Template = require("./Template");
     const ErrorWrapper = require("./ErrorWrapper");
     const TemplateList = require("./TemplateList");

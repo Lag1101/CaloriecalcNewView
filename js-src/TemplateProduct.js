@@ -4,7 +4,7 @@
 //    default: ""
 //}
 module.exports = (function(){
-    const $ = require("jquery");
+    //const $ = require("jquery");
     function TemplateProduct(fields, p, params){
 
         p = p || {};

@@ -2,7 +2,7 @@
  * Created by LuckyBug on 23.07.2016.
  */
 
-const $ = require("jquery");
+//const $ = require("jquery");
 
 module.exports = (function(){
 
