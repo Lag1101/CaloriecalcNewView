@@ -56,9 +56,9 @@ module.exports = (function(){
     };
 
     DB.goOnline = function() {
-        onlineRequests ++;
-        db.goOnline();
-        DB.onChangeOnline(true);
+        //onlineRequests ++;
+        //db.goOnline();
+        //DB.onChangeOnline(true);
         //console.log("online");
     };
 
