@@ -40,15 +40,15 @@ module.exports = (function(){
 
     var onlineRequests = 0;
     DB.goOffline = function() {
-        onlineRequests --;
-        if(onlineRequests === 0) {
-
-            setTimeout(function(){
-                //console.log("offline");
-                db.goOffline();
-                DB.onChangeOnline(false);
-            }, 2000);
-        }
+        //onlineRequests --;
+        //if(onlineRequests === 0) {
+        //
+        //    setTimeout(function(){
+        //        //console.log("offline");
+        //        db.goOffline();
+        //        DB.onChangeOnline(false);
+        //    }, 2000);
+        //}
     };
 
     DB.setOnChangeOnline = function(cb){

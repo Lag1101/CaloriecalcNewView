@@ -61,7 +61,7 @@
 	(function(){
 	    const FirebaseWrapper = __webpack_require__(2);
 	    const ErrorWrapper = __webpack_require__(5);
-	    const Template = __webpack_require__(9);
+	    const Template = __webpack_require__(6);
 
 	    $("#sign-out").click(function(){
 	        FirebaseWrapper.signOut(function(err){
@@ -114,7 +114,7 @@
 
 	            const DB = new FirebaseWrapper.DB(user.uid);
 
-	            __webpack_require__(6)(DB);
+	            __webpack_require__(8)(DB);
 	            __webpack_require__(12)(DB);
 	            __webpack_require__(13)(DB);
 	            __webpack_require__(14)(DB);
@@ -186,15 +186,15 @@
 
 	    var onlineRequests = 0;
 	    DB.goOffline = function() {
-	        onlineRequests --;
-	        if(onlineRequests === 0) {
-
-	            setTimeout(function(){
-	                //console.log("offline");
-	                db.goOffline();
-	                DB.onChangeOnline(false);
-	            }, 2000);
-	        }
+	        //onlineRequests --;
+	        //if(onlineRequests === 0) {
+	        //
+	        //    setTimeout(function(){
+	        //        //console.log("offline");
+	        //        db.goOffline();
+	        //        DB.onChangeOnline(false);
+	        //    }, 2000);
+	        //}
 	    };
 
 	    DB.setOnChangeOnline = function(cb){
@@ -965,93 +965,24 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
-	 * Created by LuckyBug on 26.07.2016.
+	 * Created by LuckyBug on 23.07.2016.
 	 */
+
+	const $ = __webpack_require__(7);
 
 	module.exports = (function(){
 
-	    const $ = __webpack_require__(7);
-	    const ErrorWrapper = __webpack_require__(5);
-	    const TemplateList = __webpack_require__(8);
-	    const Template = __webpack_require__(9);
-	    const PubSub = __webpack_require__(10);
-	    const FirebaseWrapper = __webpack_require__(2);
-	    const RawProductsFilter = $("#raw-products-filter");
 
-	    const Component = __webpack_require__(11).bind(null , [
-	        {name: "description", default: ""},
-	        {name: "proteins", default: 0},
-	        {name: "triglyceride", default: 0},
-	        {name: "carbohydrate", default: 0},
-	        {name: "calories", default: 0}
-	    ]);
-
-	    const template = new Template("#raw-product-template");
-
-
-	    function onDBReady(DB) {
-	        const componentsList = new TemplateList({
-	            collection:  DB.getChild('raw-products'),
-	            changed: function(prev, current) {
-
-	            },
-	            removed: function (p) {
-
-	            },
-	            added: function (p) {
-	                p.getEl().find(".add-to-components").click(function(){
-	                    PubSub.publish( 'AddRawProductToComponents', p.getItems() );
-	                });
-	            },
-	            got: function (products) {
-	                if(products.length === 0) {
-	                    new FirebaseWrapper.DB("TemplateRawProducts").getChild('/').getValue(function(err, res) {
-	                        if(err){
-	                            ErrorWrapper(err);
-	                        } else {
-	                            downloadDefaults(res);
-	                        }
-	                    });
-	                }
-	            },
-
-	            TemplateProduct: Component,
-	            listEl: $("#raw-product-list"),
-	            template: template
-	        });
-
-	        function downloadDefaults(defaults) {
-	            Object.keys(defaults).map(function(id){
-	                componentsList.addProduct(defaults[id]);
-	            });
-	        }
-
-	        const newRawProductEl = $("#new-raw-product");
-	        const addRawProductEl = $("#add-raw-product");
-
-	        const newRawProduct = new Component({id: "new-raw-product"}).linkToDOM(newRawProductEl);
-
-	        addRawProductEl.click(function(){
-	            componentsList.addProduct(newRawProduct.getItems());
-	        });
-
-	        RawProductsFilter.on("input", function(){
-	            var text = RawProductsFilter.val().toLowerCase();
-	            Object.keys(componentsList.products).forEach(function(key){
-	                var p = componentsList.products[key];
-
-	                if(p.getItems().description.toLowerCase().indexOf(text) < 0) {
-	                    p.getEl().addClass("hidden")
-	                } else {
-	                    p.getEl().removeClass("hidden")
-	                }
-
-	            });
-	        });
+	    function Template(id) {
+	        this.el = $(id);
 	    }
 
-	    return onDBReady;
+	    Template.prototype.clone = function() {
+	        return this.el.children().clone();
+	    };
+	    return Template;
 	})();
+
 
 /***/ },
 /* 7 */
@@ -11138,6 +11069,99 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
+	 * Created by LuckyBug on 26.07.2016.
+	 */
+
+	module.exports = (function(){
+
+	    const $ = __webpack_require__(7);
+	    const ErrorWrapper = __webpack_require__(5);
+	    const TemplateList = __webpack_require__(9);
+	    const Template = __webpack_require__(6);
+	    const PubSub = __webpack_require__(10);
+	    const FirebaseWrapper = __webpack_require__(2);
+	    const RawProductsFilter = $("#raw-products-filter");
+
+	    const Component = __webpack_require__(11).bind(null , [
+	        {name: "description", default: ""},
+	        {name: "proteins", default: 0},
+	        {name: "triglyceride", default: 0},
+	        {name: "carbohydrate", default: 0},
+	        {name: "calories", default: 0}
+	    ]);
+
+	    const template = new Template("#raw-product-template");
+
+
+	    function onDBReady(DB) {
+	        const componentsList = new TemplateList({
+	            collection:  DB.getChild('raw-products'),
+	            changed: function(prev, current) {
+
+	            },
+	            removed: function (p) {
+
+	            },
+	            added: function (p) {
+	                p.getEl().find(".add-to-components").click(function(){
+	                    PubSub.publish( 'AddRawProductToComponents', p.getItems() );
+	                });
+	            },
+	            got: function (products) {
+	                if(products.length === 0) {
+	                    new FirebaseWrapper.DB("TemplateRawProducts").getChild('/').getValue(function(err, res) {
+	                        if(err){
+	                            ErrorWrapper(err);
+	                        } else {
+	                            downloadDefaults(res);
+	                        }
+	                    });
+	                }
+	            },
+
+	            TemplateProduct: Component,
+	            listEl: $("#raw-product-list"),
+	            template: template
+	        });
+
+	        function downloadDefaults(defaults) {
+	            Object.keys(defaults).map(function(id){
+	                componentsList.addProduct(defaults[id]);
+	            });
+	        }
+
+	        const newRawProductEl = $("#new-raw-product");
+	        const addRawProductEl = $("#add-raw-product");
+
+	        const newRawProduct = new Component({id: "new-raw-product"}).linkToDOM(newRawProductEl);
+
+	        addRawProductEl.click(function(){
+	            componentsList.addProduct(newRawProduct.getItems());
+	        });
+
+	        RawProductsFilter.on("input", function(){
+	            var text = RawProductsFilter.val().toLowerCase();
+	            Object.keys(componentsList.products).forEach(function(key){
+	                var p = componentsList.products[key];
+
+	                if(p.getItems().description.toLowerCase().indexOf(text) < 0) {
+	                    p.getEl().addClass("hidden")
+	                } else {
+	                    p.getEl().removeClass("hidden")
+	                }
+
+	            });
+	        });
+	    }
+
+	    return onDBReady;
+	})();
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
 	 * Created by luckybug on 27.07.16.
 	 */
 
@@ -11252,30 +11276,6 @@
 
 	    return ListTemplate;
 	})();
-
-/***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Created by LuckyBug on 23.07.2016.
-	 */
-
-	const $ = __webpack_require__(7);
-
-	module.exports = (function(){
-
-
-	    function Template(id) {
-	        this.el = $(id);
-	    }
-
-	    Template.prototype.clone = function() {
-	        return this.el.children().clone();
-	    };
-	    return Template;
-	})();
-
 
 /***/ },
 /* 10 */
@@ -11674,9 +11674,9 @@
 
 	module.exports = (function(){
 	    const $ = __webpack_require__(7);
-	    const Template = __webpack_require__(9);
+	    const Template = __webpack_require__(6);
 	    const ErrorWrapper = __webpack_require__(5);
-	    const TemplateList = __webpack_require__(8);
+	    const TemplateList = __webpack_require__(9);
 	    
 	    const Dish = __webpack_require__(11).bind(null , [
 	        {name: "description", default: ""},
@@ -11792,8 +11792,8 @@
 
 	    const $ = __webpack_require__(7);
 	    const ErrorWrapper = __webpack_require__(5);
-	    const TemplateList = __webpack_require__(8);
-	    const Template = __webpack_require__(9);
+	    const TemplateList = __webpack_require__(9);
+	    const Template = __webpack_require__(6);
 	    const PubSub = __webpack_require__(10);
 
 	    const Component = __webpack_require__(11).bind(null , [
@@ -11855,8 +11855,8 @@
 	module.exports = (function(){
 	    const $ = __webpack_require__(7);
 	    const ErrorWrapper = __webpack_require__(5);
-	    const TemplateList = __webpack_require__(8);
-	    const Template = __webpack_require__(9);
+	    const TemplateList = __webpack_require__(9);
+	    const Template = __webpack_require__(6);
 	    const PubSub = __webpack_require__(10);
 	    const generalListEl = $("#daily-general-list");
 	    const additionalListEl = $("#daily-additional-list");
