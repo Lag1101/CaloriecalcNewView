@@ -13,6 +13,7 @@ module.exports = (function(){
     const generalListEl = $("#daily-general-list");
     const additionalListEl = $("#daily-additional-list");
     const DailyPicker = $("#daily-picker");
+    const FirebaseWrapper = require("./FirebaseWrapper");
 
     const ProductTemplate = require("./TemplateProduct").bind(null , [
         {name: "description", default: ""},
@@ -52,7 +53,9 @@ module.exports = (function(){
             });
 
             var ref = DB.getChild('daily').getChild("general").getChild(date);
+            FirebaseWrapper.DB.goOnline();
             ref.getValue(function(err, res){
+                FirebaseWrapper.DB.goOffline();
                 if(err) {
                     ErrorWrapper(err);
                     return;

@@ -97,10 +97,19 @@
 	        });
 	    });
 
+	    const onlineIcon = $("#online-icon");
+	    FirebaseWrapper.DB.setOnChangeOnline(function(online){
+	        if(online){
+	            onlineIcon.addClass("glyphicon-refresh-animate");
+	        } else {
+	            onlineIcon.removeClass("glyphicon-refresh-animate");
+	        }
+	    });
+
 	    FirebaseWrapper.setOnSignedIn(function(user){
 
 	        if(user.emailVerified){
-	            userEmailLable.text("Hello " + user.email);
+	            userEmailLable.text(user.email);
 	            authModal.modal('hide');
 
 	            const DB = new FirebaseWrapper.DB(user.uid);
@@ -159,12 +168,46 @@
 
 	    const db = firebase.database();
 
+
 	    FirebaseWrapper.DB = function(uid) {
 	        this.db = db.ref(uid);
 	        this.db.child("LastOnline").onDisconnect().set(firebase.database.ServerValue.TIMESTAMP);
 	    };
 
-	    var DB = FirebaseWrapper.DB;
+
+	    const DB = FirebaseWrapper.DB;
+
+	    function sync(){
+	        DB.goOnline();
+	        DB.goOffline();
+	    }
+
+	    setInterval(sync, 15000);
+
+	    var onlineRequests = 0;
+	    DB.goOffline = function() {
+	        onlineRequests --;
+	        if(onlineRequests === 0) {
+
+	            setTimeout(function(){
+	                //console.log("offline");
+	                db.goOffline();
+	                DB.onChangeOnline(false);
+	            }, 2000);
+	        }
+	    };
+
+	    DB.setOnChangeOnline = function(cb){
+	        DB.onChangeOnline = cb;
+	    };
+
+	    DB.goOnline = function() {
+	        onlineRequests ++;
+	        db.goOnline();
+	        DB.onChangeOnline(true);
+	        //console.log("online");
+	    };
+
 
 	    FirebaseWrapper.Collection = function(collection) {
 	        this.collection = collection;
@@ -11101,6 +11144,7 @@
 	module.exports = (function(){
 
 	    const ErrorWrapper = __webpack_require__(5);
+	    const FirebaseWrapper = __webpack_require__(2);
 
 	    function ListTemplate(params) {
 
@@ -11113,10 +11157,12 @@
 	        this.products = {};
 	        this.productsList = [];
 
+	        FirebaseWrapper.DB.goOnline();
 	        this.collection.getValue(function(err, res) {
 	            if(err) {
 	                ErrorWrapper(err);
 	            } else {
+	                FirebaseWrapper.DB.goOffline();
 	                this.onGet(res);
 	            }
 	        }.bind(this));
@@ -11815,6 +11861,7 @@
 	    const generalListEl = $("#daily-general-list");
 	    const additionalListEl = $("#daily-additional-list");
 	    const DailyPicker = $("#daily-picker");
+	    const FirebaseWrapper = __webpack_require__(2);
 
 	    const ProductTemplate = __webpack_require__(11).bind(null , [
 	        {name: "description", default: ""},
@@ -11854,7 +11901,9 @@
 	            });
 
 	            var ref = DB.getChild('daily').getChild("general").getChild(date);
+	            FirebaseWrapper.DB.goOnline();
 	            ref.getValue(function(err, res){
+	                FirebaseWrapper.DB.goOffline();
 	                if(err) {
 	                    ErrorWrapper(err);
 	                    return;

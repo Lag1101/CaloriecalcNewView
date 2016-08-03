@@ -22,12 +22,46 @@ module.exports = (function(){
 
     const db = firebase.database();
 
+
     FirebaseWrapper.DB = function(uid) {
         this.db = db.ref(uid);
         this.db.child("LastOnline").onDisconnect().set(firebase.database.ServerValue.TIMESTAMP);
     };
 
-    var DB = FirebaseWrapper.DB;
+
+    const DB = FirebaseWrapper.DB;
+
+    function sync(){
+        DB.goOnline();
+        DB.goOffline();
+    }
+
+    setInterval(sync, 15000);
+
+    var onlineRequests = 0;
+    DB.goOffline = function() {
+        onlineRequests --;
+        if(onlineRequests === 0) {
+
+            setTimeout(function(){
+                //console.log("offline");
+                db.goOffline();
+                DB.onChangeOnline(false);
+            }, 2000);
+        }
+    };
+
+    DB.setOnChangeOnline = function(cb){
+        DB.onChangeOnline = cb;
+    };
+
+    DB.goOnline = function() {
+        onlineRequests ++;
+        db.goOnline();
+        DB.onChangeOnline(true);
+        //console.log("online");
+    };
+
 
     FirebaseWrapper.Collection = function(collection) {
         this.collection = collection;

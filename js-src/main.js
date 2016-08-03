@@ -40,10 +40,19 @@
         });
     });
 
+    const onlineIcon = $("#online-icon");
+    FirebaseWrapper.DB.setOnChangeOnline(function(online){
+        if(online){
+            onlineIcon.addClass("glyphicon-refresh-animate");
+        } else {
+            onlineIcon.removeClass("glyphicon-refresh-animate");
+        }
+    });
+
     FirebaseWrapper.setOnSignedIn(function(user){
 
         if(user.emailVerified){
-            userEmailLable.text("Hello " + user.email);
+            userEmailLable.text(user.email);
             authModal.modal('hide');
 
             const DB = new FirebaseWrapper.DB(user.uid);
