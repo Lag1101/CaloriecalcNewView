@@ -38,15 +38,8 @@
         FirebaseWrapper.signIn(s.email, s.password, function(err){
             if(err)ErrorWrapper(err)
         });
-    });
 
-    const onlineIcon = $("#online-icon");
-    FirebaseWrapper.DB.setOnChangeOnline(function(online){
-        if(online){
-            onlineIcon.addClass("glyphicon-refresh-animate");
-        } else {
-            onlineIcon.removeClass("glyphicon-refresh-animate");
-        }
+        return false;
     });
 
     FirebaseWrapper.setOnSignedIn(function(user){
@@ -62,11 +55,10 @@
             require("./ComponentsControl")(DB);
             require("./DailyControl")(DB);
         } else {
-            authModal.modal('show');
-
             var alertInfo = alertInfoTemplate.clone();
             alertInfo.find(".alert-info-text").text("Please , verify your email");
             authModal.find(".modal-footer").append(alertInfo);
+            authModal.modal('show');
         }
     });
 
