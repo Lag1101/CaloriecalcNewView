@@ -27,9 +27,11 @@ module.exports = (function(){
     const newDishEl = $("#new-dish");
     const addNewDishEl = $("#add-new-dish");
 
-    const newDish = new Dish({id: "new-raw-product"}, {onChange: function(prev, cur){
-        updatePortion(cur);
-    }}).linkToDOM(newDishEl);
+    const newDish = new Dish({id: "new-raw-product"}, {
+        onChange: function(prev, cur){
+            updatePortion(cur);
+        }
+    }).linkToDOM(newDishEl);
 
     const itemNames = [
         "proteins",
@@ -69,7 +71,21 @@ module.exports = (function(){
 
             },
             added: function (p) {
-
+                dailyPartsNames.forEach(function(name){
+                    var dishName = "set-" + name;
+                    p.getEl().find("." + dishName).on("click", function (event) {
+                        var items = p.getItems();
+                        PubSub.publish(dishName, {
+                            description: items.description,
+                            proteins: items["portion-proteins"],
+                            triglyceride: items["portion-triglyceride"],
+                            carbohydrate: items["portion-carbohydrate"],
+                            calories: items["portion-calories"],
+                            mass: items["portion-mass"]
+                        });
+                        event.preventDefault();
+                    })
+                });
             },
             got: function (products) {
                 PubSub.publish( 'ComponentsListReady', products );
@@ -79,7 +95,15 @@ module.exports = (function(){
             listEl: $("#dish-list"),
             template: template
         });
-
+        const dailyPartsNames = [
+            "breakfast",
+            "lunch",
+            "dinner",
+            "snack",
+            "second-dinner",
+            "bedtime",
+            "additional"
+        ];
         addNewDishEl.click(function(){
             dishList.addProduct(newDish.getItems());
         });

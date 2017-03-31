@@ -7,7 +7,7 @@
     "deploy": "firebase deploy",
     "build": "webpack",
     "build-production": "webpack --optimize-minimize",
-    "watch": "webpack --progress --colors --watch"
+    "watch": "webpack --progress --colors --watch  --config webpack.config.js"
   },
   "dependencies": {
     "jquery": "~3.1.0",

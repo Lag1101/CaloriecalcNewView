@@ -114,6 +114,15 @@ module.exports = (function(){
         }.bind(this));
     };
 
+    TemplateProduct.prototype.concatItems = function(items) {
+        var newNames = Object.keys(items);
+        this.itemsNames.forEach(function(name){
+            if(newNames.indexOf(name) < 0) return;
+
+            this.items[name] += items[name];
+        }.bind(this));
+    };
+
     TemplateProduct.prototype.setItemsToDefault = function() {
         this.fields.forEach(function(f){
             this.items[f.name] = f.default;

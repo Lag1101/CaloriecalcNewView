@@ -5,7 +5,6 @@
 module.exports = (function(){
 
     const ErrorWrapper = require("./ErrorWrapper");
-    const FirebaseWrapper = require("./FirebaseWrapper");
 
     function ListTemplate(params) {
 
@@ -18,12 +17,10 @@ module.exports = (function(){
         this.products = {};
         this.productsList = [];
 
-        FirebaseWrapper.DB.goOnline();
         this.collection.getValue(function(err, res) {
             if(err) {
                 ErrorWrapper(err);
             } else {
-                FirebaseWrapper.DB.goOffline();
                 this.onGet(res);
             }
         }.bind(this));

@@ -44,8 +44,12 @@
     /*width: 30px;*/
 /*}*/
 
-.daily-product > .daily-lable{
+.daily-lable{
     width: 60px;
+}
+
+.daily-lable-half{
+    width: 30px;
 }
 
 .daily-product > button{

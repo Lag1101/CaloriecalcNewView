@@ -1,9 +1,10 @@
 
-
 module.exports = {
-    entry: "./wp-entry.js",
+    entry: {
+        bundle: "./wp-entry.js"
+    },
     output: {
-        path: "./public/js/",
-        filename: "bundle.js"
+        path: "/home/luckybug/dev/workspace/CaloriecalcNewView/public/js",
+        filename: "[name].js"
     }
 };

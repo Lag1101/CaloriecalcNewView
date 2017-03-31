@@ -53,9 +53,7 @@ module.exports = (function(){
             });
 
             var ref = DB.getChild('daily').getChild("general").getChild(date);
-            FirebaseWrapper.DB.goOnline();
             ref.getValue(function(err, res){
-                FirebaseWrapper.DB.goOffline();
                 if(err) {
                     ErrorWrapper(err);
                     return;
@@ -109,7 +107,29 @@ module.exports = (function(){
                 listEl: additionalListEl,
                 template: additionalTemplate
             });
+
+            dailyPartsNames.forEach(function(name){
+                PubSub.unsubscribe("set-" + name);
+                PubSub.subscribe("set-" + name, function(_, items){
+                    var part = dailyParts[name];
+                    if(part.getItems()["description"].length)
+                        items.description = " " + items.description;
+                    part.concatItems(items);
+                    part.updateEl();
+                    var cur = {};
+                    dailyPartsNames.forEach(function(name){
+                        cur[name] = dailyParts[name].getItems();
+                    });
+                    DB.getChild('daily').getChild("general").getChild(date).set(cur, function(err){
+                        if (err) ErrorWrapper(err);
+                    });
+                });
+            });
         }
+
+        PubSub.subscribe("set-additional", function(_, items){
+            additionalList.addProduct(items);
+        });
 
         const newRawProductEl = $("#new-daily-product");
 
