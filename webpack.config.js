@@ -5,6 +5,6 @@ module.exports = {
     },
     output: {
         path: "/home/luckybug/dev/workspace/CaloriecalcNewView/public/js",
-        filename: "[name].js"
+        filename: "[name].[hash].js"
     }
 };

@@ -2,6 +2,10 @@
  * Created by luckybug on 27.07.16.
  */
 
+function fixPrecision(v){
+    return parseFloat(v.toFixed(2))
+}
+
 module.exports = (function(){
     //const $ = require("jquery");
     const Template = require("./Template");
@@ -48,7 +52,7 @@ module.exports = (function(){
         if(!fullMass) return;
 
         itemNames.forEach(function(name){
-            dishItems["portion-" + name] = dishItems["full-" + name] * portionMass / fullMass;
+            dishItems["portion-" + name] = fixPrecision(dishItems["full-" + name] * portionMass / fullMass);
         });
         dish.setItems(dishItems);
         dish.updateEl();
@@ -123,7 +127,7 @@ module.exports = (function(){
                 var base = parseFloat(dishItems["full-" + name] || 0);
                 var pr = parseFloat(prevItems[name] || 0) * prevMass / 100;
                 var cu = parseFloat(currentItems[name] || 0) * currentMass / 100;
-                dishItems["full-" + name] = base - pr + cu;
+                dishItems["full-" + name] = fixPrecision(base - pr + cu);
             });
 
             newDish.setItems(dishItems);

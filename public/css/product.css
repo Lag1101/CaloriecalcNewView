@@ -50,15 +50,11 @@ body{
 /*}*/
 
 .daily-lable{
-    width: 60px;
+    width: 4em;
 }
 
 .daily-lable-half{
-    width: 30px;
-}
-
-.daily-product > button{
-    width: 60px;
+    width: 2em;
 }
 
 .daily-product > textarea{
@@ -69,7 +65,7 @@ body{
     vertical-align: top;
 }
 
-.dish-item, .component-item, .product-item,.daily-item {
+button, input{
     margin: 0;
     padding: 0;
 }
