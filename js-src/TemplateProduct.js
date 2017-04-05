@@ -50,7 +50,6 @@ module.exports = (function(){
         }.bind(this));
 
         this.root.find("textarea").each(function(i, el) {
-            textareaResize(el);
             $(el).on("input", function(){
                 textareaResize(el);
             })
@@ -83,8 +82,14 @@ module.exports = (function(){
         if(!state || state === this.state || Object.keys(TemplateProduct.StateClass).indexOf(state) < 0 )
             return;
 
-        this.root && this.root.removeClass(TemplateProduct.StateClass[this.state]);
-        this.root && this.root.addClass(TemplateProduct.StateClass[state]);
+        this.itemsNames.forEach(function(name) {
+            var el = this.el[name]
+            if(el === undefined)
+                return;
+
+            el.removeClass(TemplateProduct.StateClass[this.state]);
+            el.addClass(TemplateProduct.StateClass[state]);
+        }.bind(this))
 
         this.setState(state);
     };
@@ -112,6 +117,9 @@ module.exports = (function(){
 
             this.items[name] = items[name];
         }.bind(this));
+        this.root.find("textarea").each(function(i, el) {
+            textareaResize(el);
+        });
     };
 
     TemplateProduct.prototype.concatItems = function(items) {
@@ -127,12 +135,19 @@ module.exports = (function(){
         this.fields.forEach(function(f){
             this.items[f.name] = f.default;
         }.bind(this));
+        this.root.find("textarea").each(function(i, el) {
+            textareaResize(el);
+        });
     };
 
     TemplateProduct.prototype.updateEl = function() {
         this.itemsNames.forEach(function(name){
             this.el[name].val(this.items[name]);
         }.bind(this));
+
+        this.root.find("textarea").each(function(i, el) {
+            textareaResize(el);
+        });
     };
 
     return TemplateProduct;
