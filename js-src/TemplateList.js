@@ -5,6 +5,7 @@
 module.exports = (function(){
 
     const ErrorWrapper = require("./ErrorWrapper");
+    const Warning = require("./WarningModal");
 
     function ListTemplate(params) {
 
@@ -13,6 +14,7 @@ module.exports = (function(){
         this.template = this.params.template;
         this.listEl = this.params.listEl;
         this.TemplateProduct = this.params.TemplateProduct;
+        this.sortFunc = this.params.sortFunc;
 
         this.products = {};
         this.productsList = [];
@@ -25,10 +27,20 @@ module.exports = (function(){
             }
         }.bind(this));
 
+        this.confirmRemove = !!params.confirmRemove;
+
     }
 
     ListTemplate.prototype.onGet = function(componentsRes){
-        var components = componentsRes ? Object.keys(componentsRes).map(function(id){
+        var ids = Object.keys(componentsRes);
+
+        var sortFunc = this.sortFunc;
+        if(sortFunc){
+            ids = ids.sort(function (a, b) {
+                return sortFunc(componentsRes[a], componentsRes[b]);
+            });
+        }
+        var components = componentsRes ? ids.map(function(id){
             return this.addToList(id, componentsRes[id]);
         }.bind(this)) : [];
 
@@ -46,7 +58,26 @@ module.exports = (function(){
 
     ListTemplate.prototype.addToList = function(id, items) {
         var el = this.template.clone();
-        this.listEl.append(el);
+
+        var sortFunc = this.sortFunc;
+        if(sortFunc){
+            var iterEl = null;
+            for(var i = 0; i < this.productsList.length; i++){
+                var p = this.productsList[i];
+                if(sortFunc(items, p.getItems()) <= 0){
+                    iterEl = p.getEl();
+                    break;
+                }
+            }
+
+            if(iterEl === null){
+                this.listEl.append(el);
+            } else {
+                el.insertBefore(iterEl);
+            }
+        } else {
+            this.listEl.append(el);
+        }
 
         var p = new this.TemplateProduct({id: id, items: items}, {onChange: this.onChange.bind(this)}).linkToDOM(el);
 
@@ -54,6 +85,12 @@ module.exports = (function(){
 
         this.products[id] = p;
         this.productsList.push(p);
+
+        if(sortFunc){
+            this.productsList = this.productsList.sort(function (a, b) {
+                return sortFunc(a.getItems(), b.getItems());
+            });
+        }
 
         this.params.added && this.params.added(p);
 
@@ -75,31 +112,45 @@ module.exports = (function(){
         return p;
     };
 
+    const warning = new Warning("confirm-modal");
     ListTemplate.prototype.remove = function(p) {
-        p.applyState("sync");
-        this.collection.getChild(p.getId()).remove(function(err){
-            if(err){
-                ErrorWrapper(err);
-                var el = this.template.clone();
-                this.listEl.append(el);
-                p.linkToDOM(el);
-                p.applyState("error");
-            } else {
 
-            }
-        }.bind(this));
-        p.getEl().remove();
+        var remove = function(){
+            p.applyState("sync");
+            this.collection.getChild(p.getId()).remove(function(err){
+                if(err){
+                    ErrorWrapper(err);
+                    var el = this.template.clone();
+                    this.listEl.append(el);
+                    p.linkToDOM(el);
+                    p.applyState("error");
+                } else {
 
-        for(var i = 0; i < this.productsList.length; i++){
-            if (p.getId() === this.productsList[i].getId()) {
-                this.productsList.splice(i, 1);
-                break;
+                }
+            }.bind(this));
+            p.getEl().remove();
+
+            for(var i = 0; i < this.productsList.length; i++){
+                if (p.getId() === this.productsList[i].getId()) {
+                    this.productsList.splice(i, 1);
+                    break;
+                }
             }
+
+            delete this.products[p.getId()];
+
+            this.params.removed && this.params.removed(p);
+        }.bind(this);
+
+        if(this.confirmRemove) {
+            warning.Show({
+                text: "Удалить " + p.getItems()["description"] + " ?",
+                ok: remove
+            });
+        } else {
+            remove();
         }
 
-        delete this.products[p.getId()];
-
-        this.params.removed && this.params.removed(p);
     };
 
     ListTemplate.prototype.clear = function () {

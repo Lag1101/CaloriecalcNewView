@@ -51,7 +51,17 @@ module.exports = (function(){
 
             TemplateProduct: Component,
             listEl: $("#raw-product-list"),
-            template: template
+            template: template,
+            sortFunc: function(a, b){
+                var ad = a["description"].toLowerCase();
+                var bd = b["description"].toLowerCase();
+                if(ad < bd)
+                    return -1;
+                if(ad > bd)
+                    return 1;
+                return 0;
+            },
+            confirmRemove: true
         });
 
         function downloadDefaults(defaults) {
@@ -60,12 +70,12 @@ module.exports = (function(){
             });
         }
 
-        const newRawProductEl = $("#new-raw-product");
         const addRawProductEl = $("#add-raw-product");
+        const newRawProductEl = $("#new-raw-product");
 
         const newRawProduct = new Component({id: "new-raw-product"}).linkToDOM(newRawProductEl);
 
-        addRawProductEl.click(function(){
+        addRawProductEl.on("click", function(){
             componentsList.addProduct(newRawProduct.getItems());
         });
 

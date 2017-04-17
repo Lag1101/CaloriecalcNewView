@@ -97,7 +97,8 @@ module.exports = (function(){
 
             TemplateProduct: Dish,
             listEl: $("#dish-list"),
-            template: template
+            template: template,
+            confirmRemove: true
         });
         const dailyPartsNames = [
             "breakfast",

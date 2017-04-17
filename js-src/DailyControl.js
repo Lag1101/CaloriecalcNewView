@@ -105,7 +105,8 @@ module.exports = (function(){
 
                 TemplateProduct: ProductTemplate,
                 listEl: additionalListEl,
-                template: additionalTemplate
+                template: additionalTemplate,
+                confirmRemove: true
             });
 
             dailyPartsNames.forEach(function(name){
